@@ -14,21 +14,21 @@ public class Cliente {
     @Column(name = "ID_CLIENTE")
     private Integer idCliente;
 
-    @Column(name = "DNI", nullable = false, unique = true)
-    private Integer dni;
-
     @Column(name = "NOMBRE", nullable = false, length = 100)
     private String nombre;
 
     @Column(name = "APELLIDO", nullable = false, length = 100)
     private String apellido;
 
-    @Column(name = "DIRECCION", nullable = false, length = 200)
-    private String direccion;
+    @Column(name = "DNI", nullable = false, unique = true)
+    private Integer dni;
 
     @Column(name = "TELEFONO", length = 15)
     private String telefono;
 
     @Column(name = "EMAIL", length = 100, unique = true)
     private String email;
+
+    @Column(name = "DIRECCION", nullable = false, length = 200)
+    private String direccion;
 }
