@@ -14,11 +14,11 @@
 	</parent>
 
 	<groupId>com.miempresa</groupId>
-	<artifactId>ms-solicitudes</artifactId>
+	<artifactId>ms-clientes</artifactId>
 	<version>${project.parent.version}</version>
 	<packaging>jar</packaging>
-	<name>ms-solicitudes</name>
-	<description>Microservicio solicitudes</description>
+	<name>ms-clientes</name>
+	<description>Microservicio clientes</description>
 
 	<properties>
 		<java.version>${java.version}</java.version>
