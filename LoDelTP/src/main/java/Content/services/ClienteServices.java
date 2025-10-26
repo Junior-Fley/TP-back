@@ -10,5 +10,4 @@ public class ClienteServices {
         listarCLientes().forEach(System.out::println);
         return listarCLientes();
     }
-
 }

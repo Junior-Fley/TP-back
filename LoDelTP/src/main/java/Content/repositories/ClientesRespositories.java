@@ -1,5 +1,7 @@
-package Content.repositories;
-
-public class ClientesRespositories extends MetodosPadre {
-
-}
+//package Content.repositories;
+//
+//public class ClientesRespositories extends MetodosPadre {
+//
+//
+//
+//}

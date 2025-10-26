@@ -1,20 +1,25 @@
 package Content.controllers;
 
+import Content.models.Solicitud;
+import Content.services.SolicitudService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
-import Content.services.SolicitudService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/solicitudes")
 @RequiredArgsConstructor
 public class SolicitudController {
 
+
     private final SolicitudService service;
-//
-//    @GetMapping
-//    public ResponseEntity<List<Solicitud>> all() {
-//        return ResponseEntity.ok(service.findAll());
-//    }
+
+    @GetMapping()
+    public ResponseEntity<List<Solicitud>> all() {
+        return ResponseEntity.ok(service.findAll());
+    }
 //
 //    @GetMapping("/{id}")
 //    public ResponseEntity<Solicitud> getById(@PathVariable Long id) {

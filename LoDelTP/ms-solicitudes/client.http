@@ -1,0 +1,21 @@
+### Base variables
+
+@solicitudes = http://localhost:8090/api/solicitudes
+@maridaje = http://localhost:8082/api/maridaje
+
+
+### Listar todas las comidas
+
+GET {{solicitudes}} HTTP/1.1
+
+
+### Ver una comida
+
+# @name PIZZA
+
+GET {{comidas}}/1 HTTP/1.1
+
+
+### Ver la sugerencia para esa comida
+
+GET {{maridaje}}/{{PIZZA.response.body.id}} HTTP/1.1
