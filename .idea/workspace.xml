@@ -4,25 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c278c950-adfb-483d-b692-6f42edfbc721" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/LoDelTP/README-MICROSERVICIOS.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/client.http" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/src/main/java/com/microservicio/clientes/ClientesApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/src/main/java/com/microservicio/clientes/controllers/ClienteController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/src/main/java/com/microservicio/clientes/models/Cliente.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/src/main/java/com/microservicio/clientes/repositories/ClienteRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/src/main/java/com/microservicio/clientes/services/ClienteService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/src/main/resources/clientes_data.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/ms-clientes/src/test/java/com/microservicio/clientes/ClientesApplicationTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/start-all-microservices.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LoDelTP/stop-all-microservices.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/src/main/resources/solicitud_data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/src/main/resources/solicitud_data.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LoDelTP/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/LoDelTP/pom.xml" afterDir="false" />
-    </list>
+    <list default="true" id="c278c950-adfb-483d-b692-6f42edfbc721" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -39,26 +21,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.ClientesApplication.executor": "Run",
-    "Application.SolicitudesApplication.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/braia/Desktop/Tode/Facu/BDA/TP-back",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.ClientesApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.SolicitudesApplication.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/braia/Desktop/Tode/Facu/BDA/TP-back&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.23892.409" />
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26927.53" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-IU-251.26927.53" />
       </set>
     </attachedChunks>
   </component>
@@ -70,7 +53,11 @@
       <option name="presentableId" value="Default" />
       <updated>1761438557783</updated>
       <workItem from="1761438559418" duration="2000" />
+      <workItem from="1761485888776" duration="298000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>
