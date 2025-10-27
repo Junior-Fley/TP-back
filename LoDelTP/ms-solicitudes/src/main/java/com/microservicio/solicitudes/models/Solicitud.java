@@ -1,16 +1,16 @@
 package com.microservicio.solicitudes.models;
 
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Entity
-@Getter
-@Setter
+@Data
+@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 @Table(name = "solicitud")
 public class Solicitud {
 
@@ -43,4 +43,3 @@ public class Solicitud {
     @Column(name = "estado_solicitud")
     private String estadoSolicitud;
 }
-

@@ -40,6 +40,16 @@ public class SolicitudController {
         return ResponseEntity.noContent().build();
     }
 
+    //localhost:8090/api/solicitudes/rutas/1
+    @GetMapping("/rutas/{id}")
+    public ResponseEntity<Solicitud> obtenerSolicitudPorRuta(@PathVariable("id") Long id) {
+        Solicitud solicitud = service.obtenerPorId(id);
+        if (solicitud == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(solicitud);
+    }
+
 
 
 //    @PutMapping("/{id}")
