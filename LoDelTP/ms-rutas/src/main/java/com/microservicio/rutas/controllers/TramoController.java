@@ -1,5 +1,6 @@
 package com.microservicio.rutas.controllers;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.microservicio.rutas.models.Tramo;
 import com.microservicio.rutas.services.TramoService;
 import lombok.*;
@@ -12,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tramos")
 @RequiredArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TramoController {
 
     private final TramoService service;

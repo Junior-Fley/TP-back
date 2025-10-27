@@ -40,14 +40,16 @@ public class SolicitudController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Solicitud> actualizar(@PathVariable("id") Long id, @RequestBody Solicitud solicitud) {
-        Solicitud existente = service.obtenerPorId(id);
-        if (existente == null) {
-            return ResponseEntity.notFound().build();
-        }
-        solicitud.setNumeroSolicitud(id);
-        Solicitud actualizado = service.crear(solicitud);
-        return ResponseEntity.ok(actualizado);
-    }
+
+
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Solicitud> actualizar(@PathVariable("id") Long id, @RequestBody Solicitud solicitud) {
+//        Solicitud existente = service.obtenerPorId(id);
+//        if (existente == null) {
+//            return ResponseEntity.notFound().build();
+//        }
+//        solicitud.setNumeroSolicitud(id);
+//        Solicitud actualizado = service.crear(solicitud);
+//        return ResponseEntity.ok(actualizado);
+//    }
 }

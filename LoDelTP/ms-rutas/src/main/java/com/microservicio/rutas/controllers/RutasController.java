@@ -26,7 +26,7 @@ public class RutasController {
 
     // 🔹 Obtener una ruta por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Rutas> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<Rutas> obtenerPorId(@PathVariable("id") Long id) {
         Rutas ruta = service.obtenerPorId(id);
         if (ruta == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(ruta);
@@ -41,10 +41,17 @@ public class RutasController {
 
     // 🔹 Eliminar una ruta
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Rutas> obtenerPorSolicitud(@PathVariable("id") Long solicitudId) {
+//        Rutas ruta = service.obtenerPorSolicitud(solicitudId);
+//        if (ruta == null) return ResponseEntity.notFound().build();
+//        return ResponseEntity.ok(ruta);
+//    }
 
 //    // 🔹 Endpoint específico para el cliente externo (ej: ms-cliente)
 //    @GetMapping("/resumen/{id}")

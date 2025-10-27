@@ -1,5 +1,7 @@
 package com.microservicio.rutas.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,6 +13,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Rutas {
 
     @Id
@@ -30,6 +33,7 @@ public class Rutas {
 
     // Relación bidireccional con TRAMO
     // mappedBy = "ruta" indica que la FK está en la tabla tramo
+    @JsonManagedReference
     @OneToMany(mappedBy = "ruta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Tramo> tramos;
 }

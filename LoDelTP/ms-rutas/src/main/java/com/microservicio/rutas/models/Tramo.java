@@ -1,5 +1,6 @@
 package com.microservicio.rutas.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -52,6 +53,7 @@ public class Tramo {
     @JoinColumn(name = "id_estado")
     private EstadoTramo estado;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ruta")
     private Rutas ruta;
