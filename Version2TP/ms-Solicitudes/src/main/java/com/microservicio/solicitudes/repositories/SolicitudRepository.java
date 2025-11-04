@@ -1,6 +1,7 @@
 package com.microservicio.solicitudes.repositories;
 
 import com.microservicio.solicitudes.models.Solicitud;
+import com.microservicio.solicitudes.models.Contenedor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
@@ -10,4 +11,7 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
     List<Solicitud> findByIdCliente(Long idCliente);
 
     List<Solicitud> findByEstadoSolicitud(String estadoSolicitud);
+
+    boolean existsByContenedorAndEstadoSolicitud(Contenedor contenedor, String estadoSolicitud);
+
 }

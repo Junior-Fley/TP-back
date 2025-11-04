@@ -18,8 +18,12 @@ public class Solicitud {
     @Column(name = "numero_solicitud")
     private Long numeroSolicitud;
 
+    @ManyToOne
+    @JoinColumn(name = "id_contenedor", insertable = false, updatable = false)
+    private Contenedor contenedor;
+
     @Column(name = "id_contenedor")
-    private Integer idContenedor;
+    private Long idContenedor;
 
     @Column(name = "id_cliente")
     private Integer idCliente;

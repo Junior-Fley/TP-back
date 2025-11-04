@@ -7,6 +7,7 @@
         <option value="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-dependencies/3.5.7/spring-boot-dependencies-3.5.7.pom" />
         <option value="$PROJECT_DIR$/LoDelTP/ms-solicitudes/pom.xml" />
         <option value="$PROJECT_DIR$/LoDelTP/ms-clientes/pom.xml" />
+        <option value="$PROJECT_DIR$/Version2TP/ms-Solicitudes/pom.xml" />
       </list>
     </option>
   </component>

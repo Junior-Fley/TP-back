@@ -1,12 +1,10 @@
 package com.microservicio.solicitudes.clients;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 @Component
-@RequiredArgsConstructor
 public class RutasApiClient {
 
     private final RestClient rutasRestClient;

@@ -47,6 +47,17 @@ public class SolicitudController {
         return ResponseEntity.ok().toString();
     }
 
+    // Asigna un contenedor a la solicitud
+    @PutMapping("/{idSolicitud}/asignar/{idContenedor}")
+    public Solicitud asignarContenedor(@PathVariable Long idSolicitud, @PathVariable Long idContenedor) {
+        return service.asignarContenedor(idSolicitud, idContenedor);
+    }
+
+    // Libera el contenedor actual
+    @PutMapping("/{idSolicitud}/liberar")
+    public Solicitud liberarContenedor(@PathVariable Long idSolicitud) {
+        return service.liberarContenedor(idSolicitud);
+    }
 
 
 //    @PutMapping("/{id}")
