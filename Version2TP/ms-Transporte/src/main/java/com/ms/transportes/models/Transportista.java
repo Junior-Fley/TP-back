@@ -19,4 +19,8 @@ public class Transportista {
     private String telefono;
     private String mail;
     private String direccion;
+
+    public void setIdTransportista(Long id) {
+        this.idTransportista = id;
+    }
 }
