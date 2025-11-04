@@ -5,21 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c278c950-adfb-483d-b692-6f42edfbc721" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/controllers/ContenedorController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/models/Contenedor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/repositories/ContenedorRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/services/ContenedorService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/clients/RutasApiClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/clients/RutasApiClient.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/controllers/SolicitudController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/controllers/SolicitudController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/models/Solicitud.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/models/Solicitud.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/repositories/SolicitudRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/repositories/SolicitudRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/services/SolicitudService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/services/SolicitudService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/resources/solicitud_data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/resources/solicitud_data.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

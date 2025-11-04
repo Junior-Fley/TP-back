@@ -22,9 +22,6 @@ public class Solicitud {
     @JoinColumn(name = "id_contenedor", insertable = false, updatable = false)
     private Contenedor contenedor;
 
-    @Column(name = "id_contenedor")
-    private Long idContenedor;
-
     @Column(name = "id_cliente")
     private Integer idCliente;
 

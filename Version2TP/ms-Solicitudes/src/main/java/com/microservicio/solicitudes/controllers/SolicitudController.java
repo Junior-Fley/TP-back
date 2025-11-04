@@ -48,6 +48,7 @@ public class SolicitudController {
     }
 
     // Asigna un contenedor a la solicitud
+    //localhost:8090/api/solicitudes/1/asignar/2
     @PutMapping("/{idSolicitud}/asignar/{idContenedor}")
     public Solicitud asignarContenedor(@PathVariable Long idSolicitud, @PathVariable Long idContenedor) {
         return service.asignarContenedor(idSolicitud, idContenedor);
