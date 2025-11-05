@@ -1,27 +1,77 @@
 package com.microservicio.solicitudes.clients;
 
+import com.microservicio.solicitudes.dtos.RutaResumenDTO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestClientException;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class RutasApiClient {
 
     private final RestClient rutasRestClient;
 
-    public RutasApiClient(RestClient rutasClient) {
-        this.rutasRestClient = rutasClient;
+    /**
+     * Obtiene el resumen completo de una ruta por su ID
+     */
+//    public RutaResumenDTO obtenerResumenPorId(Long idRuta) {
+//        try {
+//            log.info("🔍 Consultando ruta {} en ms-rutas", idRuta);
+//
+//            RutaResumenDTO ruta = rutasRestClient.get()
+//                    .uri("/{id}/resumen", idRuta)
+//                    .retrieve()
+//                    .body(RutaResumenDTO.class);
+//
+//            if (ruta != null) {
+//                log.info("✅ Ruta obtenida: {} tramos, {} km, ${}",
+//                        ruta.getCantidadTramos(),
+//                        ruta.getDistanciaTotalKm(),
+//                        ruta.getCostoEstimado());
+//            }
+//
+//            return ruta;
+//
+//        } catch (RestClientException e) {
+//            log.error("❌ Error al consultar ruta {}: {}", idRuta, e.getMessage());
+//            throw new RuntimeException("No se pudo obtener la ruta desde ms-rutas", e);
+//        }
+//    }
+
+    /**
+     * Obtiene una ruta por el ID de la solicitud
+     */
+    public RutaResumenDTO obtenerRutaPorSolicitud(Long idSolicitud) {
+        try {
+            log.info("🔍 Consultando ruta de solicitud {} en ms-rutas", idSolicitud);
+
+            RutaResumenDTO ruta = rutasRestClient.get()
+                    .uri("/solicitud/{idSolicitud}/resumen", idSolicitud)
+                    .retrieve()
+                    .body(RutaResumenDTO.class);
+
+            return ruta;
+
+        } catch (RestClientException e) {
+            log.error("❌ Error al consultar ruta de solicitud {}: {}", idSolicitud, e.getMessage());
+            return null; // Puede que la solicitud aún no tenga ruta asignada
+        }
     }
 
-    // 🔹 Método que consume la API de Rutas y devuelve el JSON como String
+    /**
+     * Obtiene JSON crudo (para debugging)
+     */
     public String obtenerRutaRaw(Long idRuta) {
         try {
             return rutasRestClient.get()
                     .uri("/{id}", idRuta)
                     .retrieve()
-                    .body(String.class); // ← el JSON crudo
-        } catch (RestClientResponseException e) {
-            System.err.println("Error al consultar rutas: " + e.getMessage());
+                    .body(String.class);
+        } catch (RestClientException e) {
+            log.error("❌ Error al consultar rutas: {}", e.getMessage());
             return null;
         }
     }

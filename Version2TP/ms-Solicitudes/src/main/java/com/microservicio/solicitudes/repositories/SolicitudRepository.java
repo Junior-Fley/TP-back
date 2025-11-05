@@ -10,10 +10,10 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
     // 🔹 Consultas automáticas (Spring las genera a partir del nombre del método)
     // Antes: List<Solicitud> findByIdCliente(Long idCliente);
     // Ahora: navegar la propiedad 'cliente.idCliente'
-    List<Solicitud> findByClienteIdCliente(Long idCliente);
-
-    List<Solicitud> findByEstadoSolicitud(String estadoSolicitud);
-
-    boolean existsByContenedorAndEstadoSolicitud(Contenedor contenedor, String estadoSolicitud);
+//    List<Solicitud> findByClienteIdCliente(Long idCliente);
+//
+//    List<Solicitud> findByEstadoSolicitud(String estadoSolicitud);
+//
+//    boolean existsByContenedorAndEstadoSolicitud(Contenedor contenedor, String estadoSolicitud);
 
 }

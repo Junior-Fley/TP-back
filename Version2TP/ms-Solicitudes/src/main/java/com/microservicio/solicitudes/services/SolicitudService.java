@@ -38,33 +38,33 @@ public class SolicitudService {
         repo.deleteById(id);
     }
 
-    // ✅ Asigna un contenedor si no está usado por otra solicitud activa
-    public Solicitud asignarContenedor(Long idSolicitud, Long idContenedor) {
-        Solicitud solicitud = repo.findById(idSolicitud)
-                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
-        Contenedor contenedor = contRepo.findById(idContenedor)
-                .orElseThrow(() -> new RuntimeException("Contenedor no encontrado"));
-
-        // ⚠️ Regla: no se puede usar un contenedor que ya esté en otra solicitud activa
-        boolean ocupado = repo.existsByContenedorAndEstadoSolicitud(contenedor, "activa");
-        if (ocupado) {
-            throw new RuntimeException("El contenedor ya está asignado a otra solicitud activa");
-        }
-
-        solicitud.setContenedor(contenedor);
-        solicitud.setEstadoSolicitud("activa");
-        return repo.save(solicitud);
-    }
-
-    // 🔄 Libera el contenedor (la solicitud deja de usarlo)
-    public Solicitud liberarContenedor(Long idSolicitud) {
-        Solicitud solicitud = repo.findById(idSolicitud)
-                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
-
-        solicitud.setContenedor(null);
-        solicitud.setEstadoSolicitud("finalizada");
-        return repo.save(solicitud);
-    }
+//    // ✅ Asigna un contenedor si no está usado por otra solicitud activa
+//    public Solicitud asignarContenedor(Long idSolicitud, Long idContenedor) {
+//        Solicitud solicitud = repo.findById(idSolicitud)
+//                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
+//        Contenedor contenedor = contRepo.findById(idContenedor)
+//                .orElseThrow(() -> new RuntimeException("Contenedor no encontrado"));
+//
+//        // ⚠️ Regla: no se puede usar un contenedor que ya esté en otra solicitud activa
+//        boolean ocupado = repo.existsByContenedorAndEstadoSolicitud(contenedor, "activa");
+//        if (ocupado) {
+//            throw new RuntimeException("El contenedor ya está asignado a otra solicitud activa");
+//        }
+//
+//        solicitud.setContenedor(contenedor);
+//        solicitud.setEstadoSolicitud("activa");
+//        return repo.save(solicitud);
+//    }
+//
+//    // 🔄 Libera el contenedor (la solicitud deja de usarlo)
+//    public Solicitud liberarContenedor(Long idSolicitud) {
+//        Solicitud solicitud = repo.findById(idSolicitud)
+//                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
+//
+//        solicitud.setContenedor(null);
+//        solicitud.setEstadoSolicitud("finalizada");
+//        return repo.save(solicitud);
+//    }
 
     public void procesarSolicitud(Long idRuta) {
         String json = rutasApiClient.obtenerRutaRaw(idRuta);

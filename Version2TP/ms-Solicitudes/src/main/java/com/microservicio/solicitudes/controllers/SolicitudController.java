@@ -1,21 +1,27 @@
 package com.microservicio.solicitudes.controllers;
 
 
+import com.microservicio.solicitudes.clients.RutasApiClient;
+import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import com.microservicio.solicitudes.models.Solicitud;
 import com.microservicio.solicitudes.services.SolicitudService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/solicitudes")
 public class SolicitudController {
 
     private final SolicitudService service;
+    private final RutasApiClient rutasApiClient;
 
-    public SolicitudController(SolicitudService service) {
+
+    public SolicitudController(SolicitudService service, RutasApiClient rutasApiClient) {
         this.service = service;
+        this.rutasApiClient = rutasApiClient;
     }
 
     @GetMapping
@@ -40,35 +46,14 @@ public class SolicitudController {
         return ResponseEntity.noContent().build();
     }
 
-    //localhost:8090/api/solicitudes/rutas/1
-    @GetMapping("/ruta/{idRuta}")
-    public String consultarRuta(@PathVariable Long idRuta) {
-        service.procesarSolicitud(idRuta);
-        return ResponseEntity.ok().toString();
-    }
 
-    // Asigna un contenedor a la solicitud
-    //localhost:8090/api/solicitudes/1/asignar/2
-    @PutMapping("/{idSolicitud}/asignar/{idContenedor}")
-    public Solicitud asignarContenedor(@PathVariable Long idSolicitud, @PathVariable Long idContenedor) {
-        return service.asignarContenedor(idSolicitud, idContenedor);
-    }
-
-    // Libera el contenedor actual
-    @PutMapping("/{idSolicitud}/liberar")
-    public Solicitud liberarContenedor(@PathVariable Long idSolicitud) {
-        return service.liberarContenedor(idSolicitud);
-    }
-
-
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Solicitud> actualizar(@PathVariable("id") Long id, @RequestBody Solicitud solicitud) {
-//        Solicitud existente = service.obtenerPorId(id);
-//        if (existente == null) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        solicitud.setNumeroSolicitud(id);
-//        Solicitud actualizado = service.crear(solicitud);
-//        return ResponseEntity.ok(actualizado);
+    //"Obtener solicitud con su ruta completa desde ms-rutas"
+//    // localhost:8090/api/solicitudes/rutas/1
+//    @GetMapping("/{idSolicitud}/con-ruta")
+//    public ResponseEntity<RutaResumenDTO> obtenerConRuta(@PathVariable Long idSolicitud) {
+//        Solicitud solicitud = service.obtenerPorId(idSolicitud);
+//        RutaResumenDTO resultado = rutasApiClient.obtenerRutaRaw(solicitud.get);
+//        return ResponseEntity.ok(resultado);
 //    }
+
 }

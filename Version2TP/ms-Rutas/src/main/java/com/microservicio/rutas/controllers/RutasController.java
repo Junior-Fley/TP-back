@@ -46,28 +46,4 @@ public class RutasController {
         return ResponseEntity.noContent().build();
     }
 
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Rutas> obtenerPorSolicitud(@PathVariable("id") Long solicitudId) {
-//        Rutas ruta = service.obtenerPorSolicitud(solicitudId);
-//        if (ruta == null) return ResponseEntity.notFound().build();
-//        return ResponseEntity.ok(ruta);
-//    }
-
-//    // 🔹 Endpoint específico para el cliente externo (ej: ms-cliente)
-//    @GetMapping("/resumen/{id}")
-//    public ResponseEntity<RutaResumenDTO> obtenerResumen(@PathVariable Long id) {
-//        Rutas ruta = service.obtenerPorId(id);
-//        if (ruta == null) return ResponseEntity.notFound().build();
-//
-//        BigDecimal costoAprox = service.calcularCostoAproximado(ruta);
-//
-//        RutaResumenDTO dto = new RutaResumenDTO(
-//                ruta.getIdRuta(),
-//                ruta.getCantidadTramos(),
-//                ruta.getCantidadDepositos(),
-//                costoAprox
-//        );
-//
-//        return ResponseEntity.ok(dto);
-//    }
 }

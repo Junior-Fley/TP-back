@@ -41,6 +41,10 @@ public class Solicitud {
     @Column(name = "id_tarifa")
     private Integer idTarifa;
 
-    @Column(name = "estado_solicitud")
-    private String estadoSolicitud;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_estado", referencedColumnName = "idEstado")
+    private Estado estadoSolicitud;
+
+    @Column(name = "id_ruta")
+    private Long idRuta;
 }
