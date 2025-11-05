@@ -1,3 +1,15 @@
+-- Datos de prueba para clientes
+INSERT INTO cliente (id_cliente, nombre, apellido, dni, telefono, mail, direccion) VALUES
+(201, 'Juan', 'Pérez', '12345678', '11-1234-5678', 'juan.perez@email.com', 'Av. Corrientes 1234, CABA'),
+(202, 'María', 'González', '23456789', '11-2345-6789', 'maria.gonzalez@email.com', 'Av. Santa Fe 2345, CABA'),
+(203, 'Carlos', 'Rodríguez', '34567890', '11-3456-7890', 'carlos.rodriguez@email.com', 'Av. Rivadavia 3456, CABA'),
+(204, 'Ana', 'Martínez', '45678901', '11-4567-8901', 'ana.martinez@email.com', 'Av. Belgrano 4567, CABA'),
+(205, 'Luis', 'Fernández', '56789012', '11-5678-9012', 'luis.fernandez@email.com', 'Av. Callao 5678, CABA'),
+(206, 'Laura', 'López', '67890123', '11-6789-0123', 'laura.lopez@email.com', 'Av. 9 de Julio 6789, CABA'),
+(207, 'Pedro', 'García', '78901234', '11-7890-1234', 'pedro.garcia@email.com', 'Av. Las Heras 7890, CABA'),
+(208, 'Sofía', 'Sánchez', '89012345', '11-8901-2345', 'sofia.sanchez@email.com', 'Av. Cabildo 8901, CABA'),
+(209, 'Diego', 'Romero', '90123456', '11-9012-3456', 'diego.romero@email.com', 'Av. Pueyrredón 9012, CABA');
+
 -- Datos de prueba para contenedores
 INSERT INTO contenedor (id_contenedor, peso, volumen) VALUES
 (101, 1200.50, 8.5),

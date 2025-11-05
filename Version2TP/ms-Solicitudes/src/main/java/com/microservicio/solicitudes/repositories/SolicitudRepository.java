@@ -8,7 +8,9 @@ import java.util.List;
 public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
 
     // 🔹 Consultas automáticas (Spring las genera a partir del nombre del método)
-    List<Solicitud> findByIdCliente(Long idCliente);
+    // Antes: List<Solicitud> findByIdCliente(Long idCliente);
+    // Ahora: navegar la propiedad 'cliente.idCliente'
+    List<Solicitud> findByClienteIdCliente(Long idCliente);
 
     List<Solicitud> findByEstadoSolicitud(String estadoSolicitud);
 

@@ -9,8 +9,8 @@ public class RutasApiClient {
 
     private final RestClient rutasRestClient;
 
-    public RutasApiClient(RestClient rutasRestClient) {
-        this.rutasRestClient = rutasRestClient;
+    public RutasApiClient(RestClient rutasClient) {
+        this.rutasRestClient = rutasClient;
     }
 
     // 🔹 Método que consume la API de Rutas y devuelve el JSON como String

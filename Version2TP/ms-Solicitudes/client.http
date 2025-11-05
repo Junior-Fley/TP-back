@@ -1,21 +1,93 @@
 ### Base variables
 
-@solicitudes = http://localhost:8090/api/solicitudes
-@maridaje = http://localhost:8082/api/maridaje
+@baseUrl = http://localhost:8090/api
+@solicitudes = {{baseUrl}}/solicitudes
+@clientes = {{baseUrl}}/clientes
+@contenedores = {{baseUrl}}/contenedores
 
+###############################################
+### CLIENTES
+###############################################
 
-### Listar todas las comidas
+### Listar todos los clientes
+GET {{clientes}} HTTP/1.1
 
+### Obtener cliente por ID
+GET {{clientes}}/201 HTTP/1.1
+
+### Obtener cliente por DNI
+GET {{clientes}}/dni/12345678 HTTP/1.1
+
+### Obtener cliente por email
+GET {{clientes}}/mail/juan.perez@email.com HTTP/1.1
+
+### Crear nuevo cliente
+POST {{clientes}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "nombre": "Roberto",
+  "apellido": "Díaz",
+  "dni": "11223344",
+  "telefono": "11-1122-3344",
+  "mail": "roberto.diaz@email.com",
+  "direccion": "Av. Córdoba 1122, CABA"
+}
+
+### Actualizar cliente
+PUT {{clientes}}/201 HTTP/1.1
+Content-Type: application/json
+
+{
+  "nombre": "Juan Carlos",
+  "apellido": "Pérez",
+  "dni": "12345678",
+  "telefono": "11-1234-5678",
+  "mail": "juancarlos.perez@email.com",
+  "direccion": "Av. Corrientes 1234, CABA"
+}
+
+### Eliminar cliente
+DELETE {{clientes}}/201 HTTP/1.1
+
+###############################################
+### CONTENEDORES
+###############################################
+
+### Listar todos los contenedores
+GET {{contenedores}} HTTP/1.1
+
+### Obtener contenedor por ID
+GET {{contenedores}}/101 HTTP/1.1
+
+### Crear nuevo contenedor
+POST {{contenedores}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "peso": 1300.00,
+  "volumen": 8.0
+}
+
+### Actualizar contenedor
+PUT {{contenedores}}/101 HTTP/1.1
+Content-Type: application/json
+
+{
+  "peso": 1250.50,
+  "volumen": 8.5
+}
+
+### Eliminar contenedor
+DELETE {{contenedores}}/101 HTTP/1.1
+
+###############################################
+### SOLICITUDES
+###############################################
+
+### Listar todas las solicitudes
 GET {{solicitudes}} HTTP/1.1
 
+### Obtener solicitud por ID
+GET {{solicitudes}}/1 HTTP/1.1
 
-### Ver una comida
-
-# @name PIZZA
-
-GET {{comidas}}/1 HTTP/1.1
-
-
-### Ver la sugerencia para esa comida
-
-GET {{maridaje}}/{{PIZZA.response.body.id}} HTTP/1.1

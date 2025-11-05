@@ -22,12 +22,12 @@
 	<name>ms-solicitudes</name>
 	<description>Microservicio solicitudes</description>
 
-	<!-- 🔧 Forzamos Java 21 -->
+	<!-- 🔧 Configuración Java -->
 	<properties>
-		<java.version>21</java.version>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
-		<maven.compiler.release>21</maven.compiler.release>
+		<java.version>8</java.version>
+		<maven.compiler.source>8</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
+		<maven.compiler.release>8</maven.compiler.release>
 		<lombok.version>1.18.40</lombok.version>
 	</properties>
 
@@ -70,7 +70,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.11.0</version>
 				<configuration>
-					<release>21</release>
+					<source>8</source>
+					<target>8</target>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>

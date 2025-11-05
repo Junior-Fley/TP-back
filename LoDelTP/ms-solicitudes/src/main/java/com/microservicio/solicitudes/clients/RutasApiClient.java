@@ -11,10 +11,6 @@ public class RutasApiClient {
 
     private final RestClient rutasRestClient;
 
-    public RutasApiClient(RestClient rutasRestClient) {
-        this.rutasRestClient = rutasRestClient;
-    }
-
     // 🔹 Método que consume la API de Rutas y devuelve el JSON como String
     public String obtenerRutaRaw(Long idRuta) {
         try {

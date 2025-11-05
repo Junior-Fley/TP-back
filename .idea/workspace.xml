@@ -5,9 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c278c950-adfb-483d-b692-6f42edfbc721" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/README-CLIENTE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/SOLUCION-ERROR.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/controllers/ClienteController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/models/Cliente.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/repositories/ClienteRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/services/ClienteService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/controllers/SolicitudController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/controllers/SolicitudController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/src/main/java/com/microservicio/solicitudes/clients/RutasApiClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/LoDelTP/ms-solicitudes/src/main/java/com/microservicio/solicitudes/clients/RutasApiClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/client.http" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/client.http" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/clients/RutasApiClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/clients/RutasApiClient.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/models/Solicitud.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/models/Solicitud.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/repositories/SolicitudRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/java/com/microservicio/solicitudes/repositories/SolicitudRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/resources/solicitud_data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/Version2TP/ms-Solicitudes/src/main/resources/solicitud_data.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,8 +57,9 @@
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/braia/Desktop/Tode/Facu/BDA/TP-back&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Rarutca/Desktop/Braian/TP-back&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -72,7 +86,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.23892.409" />
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.27397.103" />
       </set>
     </attachedChunks>
   </component>
@@ -85,6 +99,9 @@
       <updated>1761438557783</updated>
       <workItem from="1761438559418" duration="2000" />
       <workItem from="1761485888776" duration="298000" />
+      <workItem from="1762301693640" duration="54000" />
+      <workItem from="1762301767050" duration="1172000" />
+      <workItem from="1762302956074" duration="658000" />
     </task>
     <servers />
   </component>

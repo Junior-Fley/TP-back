@@ -22,8 +22,9 @@ public class Solicitud {
     @JoinColumn(name = "id_contenedor", insertable = false, updatable = false)
     private Contenedor contenedor;
 
-    @Column(name = "id_cliente")
-    private Integer idCliente;
+    @ManyToOne
+    @JoinColumn(name = "id_cliente", insertable = false, updatable = false)
+    private Cliente cliente;
 
     @Column(name = "costo_estimado")
     private BigDecimal costoEstimado;
