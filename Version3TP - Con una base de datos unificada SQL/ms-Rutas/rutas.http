@@ -1,0 +1,20 @@
+### 🌐 Base de URLs
+
+@solicitudes = http://localhost:8090/api/solicitudes
+@rutas = http://localhost:8093/api/rutas
+
+### 📋 Listar todas las solicitudes
+GET {{solicitudes}} HTTP/1.1
+
+
+### 🔍 Ver una solicitud específica
+# @name SOLICITUD
+GET {{solicitudes}}/1 HTTP/1.1
+
+### 🔍 Ver una solicitud específica
+# @name RUTAS
+GET {{rutas}} HTTP/1.1
+
+### 🛣️ Ver la ruta asociada a esa solicitud
+# Suponiendo que la solicitud tiene un campo "idRuta"
+GET {{rutas}}/resumen/{{SOLICITUD.response.body.idRuta}} HTTP/1.1
