@@ -9,7 +9,7 @@ import org.springframework.web.client.RestClient;
 public class RutasApiConfig {
 
     @Bean
-    RestClient rutasClient(@Value("${api.rutas.base-url}") String baseUrl) {
+    RestClient rutasRestClient(@Value("${api.rutas.base-url}") String baseUrl) {
         return RestClient.builder()
                 .baseUrl(baseUrl)
                 .build();

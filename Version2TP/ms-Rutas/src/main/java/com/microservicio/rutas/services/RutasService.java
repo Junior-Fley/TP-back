@@ -1,6 +1,7 @@
 package com.microservicio.rutas.services;
 
 
+import com.microservicio.rutas.dtos.RutaResumenDTO;
 import com.microservicio.rutas.models.Rutas;
 import com.microservicio.rutas.repositories.RutasRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,29 @@ public class RutasService {
     // 🔹 Eliminar una ruta
     public void eliminar(Long id) {
         repo.deleteById(id);
+    }
+
+    // 🔹 Obtener resumen de una ruta (para comunicación entre microservicios)
+    public RutaResumenDTO obtenerResumen(Long id) {
+        Rutas ruta = repo.findById(id).orElse(null);
+        if (ruta == null) {
+            return null;
+        }
+
+        // Calcular el costo aproximado de todos los tramos
+        BigDecimal costoAproximado = BigDecimal.ZERO;
+        if (ruta.getTramos() != null && !ruta.getTramos().isEmpty()) {
+            costoAproximado = ruta.getTramos().stream()
+                    .map(t -> t.getCostoAproximado() != null ? t.getCostoAproximado() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        return new RutaResumenDTO(
+                ruta.getIdRuta(),
+                ruta.getCantidadTramos(),
+                ruta.getCantidadDepositos(),
+                costoAproximado
+        );
     }
 
 //    // 🔹 Calcular el costo total aproximado de todos los tramos de una ruta

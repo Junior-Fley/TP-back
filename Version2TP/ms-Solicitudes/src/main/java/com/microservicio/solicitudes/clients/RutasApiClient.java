@@ -62,16 +62,26 @@ public class RutasApiClient {
     }
 
     /**
-     * Obtiene JSON crudo (para debugging)
+     * Obtiene una ruta por ID desde ms-rutas
      */
-    public String obtenerRutaRaw(Long idRuta) {
+    public RutaResumenDTO obtenerRutaRaw(Long idRuta) {
         try {
-            return rutasRestClient.get()
-                    .uri("/{id}", idRuta)
+            log.info("🔍 Consultando ruta {} en ms-rutas", idRuta);
+
+            RutaResumenDTO ruta = rutasRestClient.get()
+                    .uri("/{id}/resumen", idRuta)
                     .retrieve()
-                    .body(String.class);
+                    .body(RutaResumenDTO.class);
+
+            if (ruta != null) {
+                log.info("✅ Ruta obtenida: ID={}, Tramos={}, Depositos={}, Costo={}",
+                        ruta.getIdRuta(), ruta.getCantidadTramos(),
+                        ruta.getCantidadDepositos(), ruta.getCostoAproximado());
+            }
+
+            return ruta;
         } catch (RestClientException e) {
-            log.error("❌ Error al consultar rutas: {}", e.getMessage());
+            log.error("❌ Error al consultar ruta {}: {}", idRuta, e.getMessage());
             return null;
         }
     }

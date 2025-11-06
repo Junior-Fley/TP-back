@@ -45,3 +45,4 @@ INSERT INTO solicitud (id_contenedor, id_cliente, costo_estimado, tiempo_estimad
                                                                                                                                        (106, 207, 6500.00, 6, 6600.00, 6, 1, 3, 3),  -- completada
                                                                                                                                        (107, 208, 7200.00, 7, NULL, NULL, 1, 1, 3),  -- pendiente
                                                                                                                                        (NULL, 209, 5300.00, 5, NULL, NULL, 3, 1, 3); -- pendiente
+

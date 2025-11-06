@@ -46,4 +46,12 @@ public class RutasController {
         return ResponseEntity.noContent().build();
     }
 
+    // 🔹 Obtener resumen de una ruta (para comunicación entre microservicios)
+    @GetMapping("/{id}/resumen")
+    public ResponseEntity<RutaResumenDTO> obtenerResumen(@PathVariable("id") Long id) {
+        RutaResumenDTO resumen = service.obtenerResumen(id);
+        if (resumen == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(resumen);
+    }
+
 }

@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/solicitudes")
@@ -48,12 +47,26 @@ public class SolicitudController {
 
 
     //"Obtener solicitud con su ruta completa desde ms-rutas"
-//    // localhost:8090/api/solicitudes/rutas/1
-//    @GetMapping("/{idSolicitud}/con-ruta")
-//    public ResponseEntity<RutaResumenDTO> obtenerConRuta(@PathVariable Long idSolicitud) {
-//        Solicitud solicitud = service.obtenerPorId(idSolicitud);
-//        RutaResumenDTO resultado = rutasApiClient.obtenerRutaRaw(solicitud.get);
-//        return ResponseEntity.ok(resultado);
-//    }
+    // localhost:8090/api/solicitudes/1/rutas
+    @GetMapping("/{idSolicitud}/rutas")
+    public ResponseEntity<RutaResumenDTO> obtenerConRuta(@PathVariable Long idSolicitud) {
+        Solicitud solicitud = service.obtenerPorId(idSolicitud);
+
+        if (solicitud == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (solicitud.getIdRuta() == null) {
+            return ResponseEntity.badRequest().build(); // La solicitud no tiene ruta asignada
+        }
+
+        RutaResumenDTO resultado = rutasApiClient.obtenerRutaRaw(solicitud.getIdRuta());
+
+        if (resultado == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(resultado);
+    }
 
 }
