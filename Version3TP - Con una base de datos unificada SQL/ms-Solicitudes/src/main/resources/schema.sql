@@ -1,8 +1,34 @@
--- Script para asegurar que la tabla solicitud tenga todas las columnas necesarias
--- SQLite no soporta ALTER TABLE IF NOT EXISTS, así que usamos un enfoque diferente
+-- Script para crear la estructura de la base de datos de solicitudes
 
--- Crear tabla temporal con la estructura correcta
-CREATE TABLE IF NOT EXISTS solicitud_new (
+-- Tabla de estados
+CREATE TABLE IF NOT EXISTS estado (
+    idEstado INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre VARCHAR(50) NOT NULL
+);
+
+-- Tabla de clientes
+CREATE TABLE IF NOT EXISTS cliente (
+    id_cliente INTEGER PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    dni VARCHAR(20) NOT NULL,
+    telefono VARCHAR(20),
+    mail VARCHAR(100),
+    direccion VARCHAR(255)
+);
+
+-- Tabla de contenedores
+CREATE TABLE IF NOT EXISTS contenedor (
+    id_contenedor INTEGER PRIMARY KEY,
+    peso DECIMAL(10,2),
+    volumen DECIMAL(10,2)
+);
+
+-- Eliminar tabla solicitud si existe (para recrearla con la estructura correcta)
+DROP TABLE IF EXISTS solicitud;
+
+-- Tabla de solicitudes con todas las columnas necesarias
+CREATE TABLE solicitud (
     numero_solicitud INTEGER PRIMARY KEY AUTOINCREMENT,
     id_contenedor INTEGER,
     id_cliente INTEGER NOT NULL,
@@ -17,15 +43,3 @@ CREATE TABLE IF NOT EXISTS solicitud_new (
     FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
     FOREIGN KEY (id_estado) REFERENCES estado(idEstado)
 );
-
--- Copiar datos de la tabla antigua si existe
-INSERT OR IGNORE INTO solicitud_new (numero_solicitud, id_contenedor, id_cliente, costo_estimado, tiempo_estimado, costo_final, tiempo_real, id_tarifa, id_estado)
-SELECT numero_solicitud, id_contenedor, id_cliente, costo_estimado, tiempo_estimado, costo_final, tiempo_real, id_tarifa, id_estado
-FROM solicitud WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='solicitud');
-
--- Eliminar tabla antigua
-DROP TABLE IF EXISTS solicitud;
-
--- Renombrar tabla nueva
-ALTER TABLE solicitud_new RENAME TO solicitud;
-
