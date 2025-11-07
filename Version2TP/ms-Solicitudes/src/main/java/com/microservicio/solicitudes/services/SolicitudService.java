@@ -65,9 +65,4 @@ public class SolicitudService {
 //        solicitud.setEstadoSolicitud("finalizada");
 //        return repo.save(solicitud);
 //    }
-
-    public void procesarSolicitud(Long idRuta) {
-        String json = rutasApiClient.obtenerRutaRaw(idRuta);
-        System.out.println("Respuesta de la API de rutas: " + json);
-    }
 }

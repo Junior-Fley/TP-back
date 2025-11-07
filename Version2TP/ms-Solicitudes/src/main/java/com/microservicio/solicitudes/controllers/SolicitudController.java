@@ -45,28 +45,17 @@ public class SolicitudController {
         return ResponseEntity.noContent().build();
     }
 
+    // ✅ Consultar información de una ruta desde el microservicio de Rutas
+    // Ejemplo: GET localhost:8090/api/solicitudes/consultar-ruta/1
+    @GetMapping("/consultar-ruta/{idRuta}")
+    public ResponseEntity<RutaResumenDTO> consultarRuta(@PathVariable Long idRuta) {
+        RutaResumenDTO ruta = rutasApiClient.obtenerRutaRaw(idRuta);
 
-    //"Obtener solicitud con su ruta completa desde ms-rutas"
-    // localhost:8090/api/solicitudes/1/rutas
-    @GetMapping("/{idSolicitud}/rutas")
-    public ResponseEntity<RutaResumenDTO> obtenerConRuta(@PathVariable Long idSolicitud) {
-        Solicitud solicitud = service.obtenerPorId(idSolicitud);
-
-        if (solicitud == null) {
+        if (ruta == null) {
             return ResponseEntity.notFound().build();
         }
 
-        if (solicitud.getIdRuta() == null) {
-            return ResponseEntity.badRequest().build(); // La solicitud no tiene ruta asignada
-        }
-
-        RutaResumenDTO resultado = rutasApiClient.obtenerRutaRaw(solicitud.getIdRuta());
-
-        if (resultado == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(resultado);
+        return ResponseEntity.ok(ruta);
     }
 
 }

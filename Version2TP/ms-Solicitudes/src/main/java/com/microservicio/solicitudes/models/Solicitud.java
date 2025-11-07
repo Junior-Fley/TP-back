@@ -1,6 +1,7 @@
 package com.microservicio.solicitudes.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -18,12 +19,14 @@ public class Solicitud {
     @Column(name = "numero_solicitud")
     private Long numeroSolicitud;
 
-    @ManyToOne
-    @JoinColumn(name = "id_contenedor", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_contenedor")
+    @JsonIgnore
     private Contenedor contenedor;
 
-    @ManyToOne
-    @JoinColumn(name = "id_cliente", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_cliente")
+    @JsonIgnore
     private Cliente cliente;
 
     @Column(name = "costo_estimado")
@@ -41,8 +44,9 @@ public class Solicitud {
     @Column(name = "id_tarifa")
     private Integer idTarifa;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "id_estado", referencedColumnName = "idEstado")
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_estado")
+    @JsonIgnore
     private Estado estadoSolicitud;
 
     @Column(name = "id_ruta")
