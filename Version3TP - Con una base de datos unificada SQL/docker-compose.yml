@@ -1,36 +1,41 @@
-version: "3.9"
-
 services:
   ms-rutas:
     build: ./ms-Rutas
     container_name: ms_rutas
     ports:
-      - "8085:8085"
+      - "8095:8095"
     environment:
-      SERVER_PORT: 8085
+      SERVER_PORT: 8095
+    volumes:
+      - ./database:/app/database
     networks:
-      [app-network]
+      - app-net
 
   ms-solicitudes:
     build: ./ms-Solicitudes
     container_name: ms_solicitudes
-    image: postgres
     ports:
       - "8090:8090"
     restart: always
+    volumes:
+      - ./database:/app/database
     depends_on:
       - ms-rutas
-    volumes:
-      -
+    networks:
+      - app-net
 
   ms-transporte:
     build: ./ms-Transporte
     container_name: ms_transporte
     ports:
-      - "8095:8095"
+      - "8085:8085"
+    volumes:
+      - ./database:/app/database
+    networks:
+      - app-net
 
   api-gateway:
-    build: ./api-gateway
+    build: ./Gateway
     container_name: api_gateway
     ports:
       - "8080:8080"
@@ -38,6 +43,8 @@ services:
       - ms-rutas
       - ms-solicitudes
       - ms-transporte
+    networks:
+      - app-net
 
 networks:
   app-net:

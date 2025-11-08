@@ -12,3 +12,4 @@ EXPOSE 8080
 
 # Comando para ejecutar el microservicio
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
