@@ -24,11 +24,21 @@ services:
     networks:
       - app-net
 
-  ms-transporte:
+  ms-flota:
     build: ms-Flotas
-    container_name: ms_transporte
+    container_name: ms_flota
     ports:
       - "8085:8085"
+    volumes:
+      - ./database:/app/database
+    networks:
+      - app-net
+
+  ms-tarifas:
+    build: ms-tarifas
+    container_name: ms_tarifas
+    ports:
+      - "8092:8085"
     volumes:
       - ./database:/app/database
     networks:
@@ -44,7 +54,7 @@ services:
     depends_on:
       - ms-rutas
       - ms-solicitudes
-      - ms-transporte
+      - ms-flota
     networks:
       - app-net
 

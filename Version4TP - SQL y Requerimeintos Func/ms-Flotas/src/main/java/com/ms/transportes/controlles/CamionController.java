@@ -40,6 +40,6 @@ public class CamionController {
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Long id) {
         service.eliminar(id);
-    }
+    }}
 
 
