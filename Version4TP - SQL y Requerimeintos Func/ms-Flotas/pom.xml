@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.miempresa</groupId>
+		<artifactId>Version2TP</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath> <!-- 👈 sube un nivel -->
+	</parent>
+
+	<groupId>com.ms</groupId>
+	<artifactId>ms-transporte</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+	<name>ms-transporte</name>
+
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+
+	<dependencies>
+
+		<!-- ========================= -->
+		<!-- 🔹 DEPENDENCIAS PRINCIPALES DE SPRING BOOT -->
+		<!-- ========================= -->
+
+		<!-- Proporciona soporte para crear APIs REST (controllers, JSON, etc.) -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Evita escribir código repetitivo (getters, setters, builders, etc.) -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Spring Data JPA (si usás base de datos) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- SQLite Database -->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.45.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-community-dialects</artifactId>
+			<version>6.4.1.Final</version>
+		</dependency>
+
+
+		<!-- ========================= -->
+		<!-- 🧪 DEPENDENCIAS PARA TESTING -->
+		<!-- ========================= -->
+		<!-- Incluye JUnit, Mockito, y herramientas de testeo de Spring -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+
+		<!-- ========================= -->
+		<!-- 📘 DOCUMENTACIÓN CON SWAGGER / OPENAPI -->
+		<!-- ========================= -->
+		<!-- Muestra automáticamente los endpoints en una interfaz web interactiva -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<!-- Acceso típico: http://localhost:8080/swagger-ui.html -->
+		<!-- ========================= -->
+
+
+		<!-- ========================= -->
+		<!-- 🔐 SEGURIDAD CON KEYCLOAK (OAUTH2 + JWT) -->
+		<!-- ========================= -->
+		<!-- Estas dependencias permiten que el microservicio actúe como Resource Server,
+             validando los tokens emitidos por Keycloak sin manejar login ni contraseñas locales -->
+
+		<!-- Base de Spring Security: provee filtros, autenticación y autorización -->
+		<!-- =========================
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		========================= -->
+		<!-- Habilita la verificación automática de tokens JWT emitidos por Keycloak -->
+		<!-- =========================
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+		========================= -->
+
+		<!-- Incluye librerías JOSE (JSON Object Signing and Encryption) para decodificar y verificar JWT -->
+		<!-- =========================
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
+		</dependency>
+		========================= -->
+
+	</dependencies>
+
+
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>

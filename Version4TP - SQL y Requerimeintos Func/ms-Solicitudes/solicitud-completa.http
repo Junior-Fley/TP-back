@@ -1,0 +1,69 @@
+### Crear Solicitud Completa - Cliente Nuevo
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 1500.5,
+  "volumenContenedor": 50.75,
+  "nombreCliente": "Juan",
+  "apellidoCliente": "Perez",
+  "dniCliente": "12345678",
+  "telefonoCliente": "5491112345678",
+  "mailCliente": "juan.perez@example.com",
+  "direccionCliente": "Av. Corrientes 1234, CABA",
+  "estadoInicial": "borrador"
+}
+
+### Crear Solicitud Completa - Cliente Existente (Reutiliza el DNI anterior)
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 2000.0,
+  "volumenContenedor": 75.5,
+  "nombreCliente": "Ignorado",
+  "apellidoCliente": "Ignorado",
+  "dniCliente": "12345678",
+  "telefonoCliente": "Ignorado",
+  "mailCliente": "ignorado@example.com",
+  "direccionCliente": "Ignorado",
+  "estadoInicial": "programada"
+}
+
+### Crear Solicitud Completa - Sin estado (usa borrador por defecto)
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 1200.0,
+  "volumenContenedor": 40.0,
+  "nombreCliente": "Maria",
+  "apellidoCliente": "Garcia",
+  "dniCliente": "87654321",
+  "telefonoCliente": "5491198765432",
+  "mailCliente": "maria.garcia@example.com",
+  "direccionCliente": "Av. Santa Fe 5678, CABA"
+}
+
+### ============================================
+### R2: CONSULTAR ESTADO DEL CONTENEDOR
+### ============================================
+
+### Consultar estado del contenedor (usar el ID del contenedor creado)
+GET http://localhost:8090/api/solicitudes/contenedor/1/estado
+
+### Consultar estado de otro contenedor
+GET http://localhost:8090/api/solicitudes/contenedor/2/estado
+
+### Consultar estado de contenedor inexistente (debería devolver 404)
+GET http://localhost:8090/api/solicitudes/contenedor/999/estado
+
+### ============================================
+### OTROS ENDPOINTS
+### ============================================
+
+### Listar todas las solicitudes
+GET http://localhost:8090/api/solicitudes
+
+### Obtener solicitud por ID
+GET http://localhost:8090/api/solicitudes/1

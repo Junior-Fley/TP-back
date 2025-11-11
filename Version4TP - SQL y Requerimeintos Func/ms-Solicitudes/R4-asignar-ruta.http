@@ -1,0 +1,107 @@
+### ============================================
+### R4: ASIGNAR RUTA A SOLICITUD
+### ============================================
+
+### 1. Primero, crear una solicitud (R1)
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 1500.5,
+  "volumenContenedor": 50.75,
+  "nombreCliente": "Carlos",
+  "apellidoCliente": "Rodriguez",
+  "dniCliente": "98765432",
+  "telefonoCliente": "5491198765432",
+  "mailCliente": "carlos.rodriguez@example.com",
+  "direccionCliente": "Av. Libertador 2000, CABA",
+  "estadoInicial": "borrador"
+}
+
+### 2. Consultar rutas tentativas disponibles
+GET http://localhost:8090/api/solicitudes/rutas-tentativas
+
+### 3. Asignar ruta a la solicitud creada (cambiar IDs según corresponda)
+PUT http://localhost:8090/api/solicitudes/1/asignar-ruta
+Content-Type: application/json
+
+{
+  "idRuta": 1
+}
+
+### 4. Verificar que la ruta fue asignada (consultar estado del contenedor)
+GET http://localhost:8090/api/solicitudes/contenedor/1/estado
+
+### 5. Ver detalles completos de la solicitud con su ruta
+GET http://localhost:8090/api/solicitudes/1/rutas
+
+### ============================================
+### CASOS DE PRUEBA ADICIONALES
+### ============================================
+
+### Caso: Asignar ruta diferente a solicitud existente
+PUT http://localhost:8090/api/solicitudes/1/asignar-ruta
+Content-Type: application/json
+
+{
+  "idRuta": 2
+}
+
+### Caso: Error - Solicitud inexistente
+PUT http://localhost:8090/api/solicitudes/999/asignar-ruta
+Content-Type: application/json
+
+{
+  "idRuta": 1
+}
+
+### Caso: Error - Ruta inexistente
+PUT http://localhost:8090/api/solicitudes/1/asignar-ruta
+Content-Type: application/json
+
+{
+  "idRuta": 999
+}
+
+### ============================================
+### FLUJO COMPLETO DE PRUEBA
+### ============================================
+
+### PASO 1: Crear solicitud en borrador
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 2500.0,
+  "volumenContenedor": 85.5,
+  "nombreCliente": "Maria",
+  "apellidoCliente": "Gonzalez",
+  "dniCliente": "45678901",
+  "telefonoCliente": "5491145678901",
+  "mailCliente": "mariaa.gonzalez@example.com",
+  "direccionCliente": "Av. Corrientes 3456, CABA",
+  "estadoInicial": "borrador"
+}
+
+### PASO 2: Ver todas las solicitudes
+GET http://localhost:8090/api/solicitudes
+
+### PASO 3: Ver rutas disponibles
+GET http://localhost:8090/api/solicitudes/rutas-tentativas
+
+### PASO 4: Asignar ruta a la solicitud (usar IDs correctos)
+### Nota: Reemplazar {idSolicitud} con el ID obtenido en PASO 1
+### Nota: Reemplazar idRuta con un ID válido del PASO 3
+PUT http://localhost:8090/api/solicitudes/2/asignar-ruta
+Content-Type: application/json
+
+{
+  "idRuta": 1
+}
+
+### PASO 5: Verificar el estado actualizado (debe estar en "programada")
+GET http://localhost:8090/api/solicitudes/contenedor/2/estado
+
+### PASO 6: Ver los tramos completos de la ruta asignada
+GET http://localhost:8090/api/solicitudes/2/rutas
+

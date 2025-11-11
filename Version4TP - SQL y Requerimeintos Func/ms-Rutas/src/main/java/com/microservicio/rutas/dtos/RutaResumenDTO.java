@@ -1,0 +1,19 @@
+package com.microservicio.rutas.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RutaResumenDTO {
+    private Long idRuta;
+    private Integer cantidadTramos;
+    private Integer cantidadDepositos;
+    private BigDecimal costoAproximado;
+    private String tiempoEstimado;
+    private List<TramoDTO> tramos;
+}

@@ -1,0 +1,447 @@
+{
+  "info": {
+    "name": "Sistema Transporte - Keycloak Auth",
+    "description": "Colección completa para probar autenticación con Keycloak",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "keycloak_url",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "realm",
+      "value": "bda-realm"
+    },
+    {
+      "key": "client_id",
+      "value": "bda-client"
+    },
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token_cliente",
+      "value": ""
+    },
+    {
+      "key": "token_admin",
+      "value": ""
+    },
+    {
+      "key": "token_transportista",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación Keycloak",
+      "item": [
+        {
+          "name": "Obtener Token CLIENTE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_cliente\", jsonData.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "username",
+                  "value": "cliente1"
+                },
+                {
+                  "key": "password",
+                  "value": "cliente123"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": ["{{keycloak_url}}"],
+              "path": ["realms", "{{realm}}", "protocol", "openid-connect", "token"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Token ADMIN",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_admin\", jsonData.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "username",
+                  "value": "admin1"
+                },
+                {
+                  "key": "password",
+                  "value": "admin123"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": ["{{keycloak_url}}"],
+              "path": ["realms", "{{realm}}", "protocol", "openid-connect", "token"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Token TRANSPORTISTA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_transportista\", jsonData.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "username",
+                  "value": "transportista1"
+                },
+                {
+                  "key": "password",
+                  "value": "trans123"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": ["{{keycloak_url}}"],
+              "path": ["realms", "{{realm}}", "protocol", "openid-connect", "token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Endpoints Públicos",
+      "item": [
+        {
+          "name": "Health Check (Sin Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/publico/health",
+              "host": ["{{gateway_url}}"],
+              "path": ["publico", "health"]
+            }
+          }
+        },
+        {
+          "name": "Info Sistema (Sin Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/publico/info",
+              "host": ["{{gateway_url}}"],
+              "path": ["publico", "info"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. CLIENTE - Solicitudes",
+      "item": [
+        {
+          "name": "Crear Solicitud (CLIENTE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"Córdoba\",\n  \"tipo_contenedor\": \"20ft\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/solicitudes/crear",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "solicitudes", "crear"]
+            }
+          }
+        },
+        {
+          "name": "Mis Solicitudes (CLIENTE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/solicitudes/mis-solicitudes",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "solicitudes", "mis-solicitudes"]
+            }
+          }
+        },
+        {
+          "name": "❌ Intentar acceder a Rutas (Debe Fallar)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/rutas",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "rutas"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. ADMIN - Gestión",
+      "item": [
+        {
+          "name": "Listar Todas las Rutas (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/rutas",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "rutas"]
+            }
+          }
+        },
+        {
+          "name": "Crear Ruta (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ruta Nacional 1\",\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"Rosario\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/rutas",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "rutas"]
+            }
+          }
+        },
+        {
+          "name": "Ver Todos los Tramos (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/tramos/admin/todos",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "tramos", "admin", "todos"]
+            }
+          }
+        },
+        {
+          "name": "Ver Todas las Solicitudes (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/solicitudes/admin/todas",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "solicitudes", "admin", "todas"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. TRANSPORTISTA - Tramos",
+      "item": [
+        {
+          "name": "Mis Tramos Asignados (TRANSPORTISTA)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transportista}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/tramos/mis-tramos",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "tramos", "mis-tramos"]
+            }
+          }
+        },
+        {
+          "name": "Iniciar Tramo (TRANSPORTISTA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transportista}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/tramos/5/iniciar",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "tramos", "5", "iniciar"]
+            }
+          }
+        },
+        {
+          "name": "Finalizar Tramo (TRANSPORTISTA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transportista}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/tramos/5/finalizar",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "tramos", "5", "finalizar"]
+            }
+          }
+        },
+        {
+          "name": "❌ Intentar Crear Ruta (Debe Fallar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transportista}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ruta Test\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/rutas",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "rutas"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
