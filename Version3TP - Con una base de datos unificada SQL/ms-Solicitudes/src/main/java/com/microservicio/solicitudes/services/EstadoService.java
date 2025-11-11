@@ -26,14 +26,21 @@ public class EstadoService {
         return repo.save(estado);
     }
 
-//    public Estado actualizar(Long id, Estado actualizado) {
-//        Estado existente = repo.findById(id).orElseThrow(() ->
-//                new RuntimeException("Estado no encontrado con ID " + id));
-//        existente.setNombre(actualizado.getNombre());
-//        return repo.save(existente);
-//    }
-
     public void eliminar(Long id) {
         repo.deleteById(id);
     }
+
+    public Estado obtenerPorNombre(String nombre) {
+        return repo.findByNombre(nombre).orElse(null);
+    }
+
+    public Estado obtenerOCrearPorNombre(String nombre) {
+        return repo.findByNombre(nombre).orElseGet(() -> {
+            Estado nuevoEstado = new Estado();
+            nuevoEstado.setNombre(nombre);
+            return repo.save(nuevoEstado);
+        });
+    }
+
+
 }

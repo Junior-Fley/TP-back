@@ -3,9 +3,12 @@ package com.microservicio.solicitudes.clients;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -13,33 +16,6 @@ import org.springframework.web.client.RestClientException;
 public class RutasApiClient {
 
     private final RestClient rutasRestClient;
-
-    /**
-     * Obtiene el resumen completo de una ruta por su ID
-     */
-//    public RutaResumenDTO obtenerResumenPorId(Long idRuta) {
-//        try {
-//            log.info("🔍 Consultando ruta {} en ms-rutas", idRuta);
-//
-//            RutaResumenDTO ruta = rutasRestClient.get()
-//                    .uri("/{id}/resumen", idRuta)
-//                    .retrieve()
-//                    .body(RutaResumenDTO.class);
-//
-//            if (ruta != null) {
-//                log.info("✅ Ruta obtenida: {} tramos, {} km, ${}",
-//                        ruta.getCantidadTramos(),
-//                        ruta.getDistanciaTotalKm(),
-//                        ruta.getCostoEstimado());
-//            }
-//
-//            return ruta;
-//
-//        } catch (RestClientException e) {
-//            log.error("❌ Error al consultar ruta {}: {}", idRuta, e.getMessage());
-//            throw new RuntimeException("No se pudo obtener la ruta desde ms-rutas", e);
-//        }
-//    }
 
     /**
      * Obtiene una ruta por el ID de la solicitud
@@ -57,7 +33,7 @@ public class RutasApiClient {
 
         } catch (RestClientException e) {
             log.error("❌ Error al consultar ruta de solicitud {}: {}", idSolicitud, e.getMessage());
-            return null; // Puede que la solicitud aún no tenga ruta asignada
+            return null;
         }
     }
 
@@ -69,7 +45,7 @@ public class RutasApiClient {
             log.info("🔍 Consultando ruta {} en ms-rutas", idRuta);
 
             RutaResumenDTO ruta = rutasRestClient.get()
-                    .uri("/{id}/resumen", idRuta)
+                    .uri("/{id}", idRuta)
                     .retrieve()
                     .body(RutaResumenDTO.class);
 
@@ -85,4 +61,30 @@ public class RutasApiClient {
             return null;
         }
     }
+
+    /**
+     * Obtiene todas las rutas tentativas con su resumen completo.
+     * Incluye todos los tramos sugeridos, tiempo y costo estimados.
+     */
+    public List<RutaResumenDTO> obtenerRutasTentativas() {
+        try {
+            log.info("🔍 Consultando rutas tentativas en ms-rutas");
+
+            List<RutaResumenDTO> rutas = rutasRestClient.get()
+                    .uri("/tentativas/resumen")
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<RutaResumenDTO>>() {});
+
+            if (rutas != null) {
+                log.info("✅ {} rutas tentativas obtenidas", rutas.size());
+            }
+
+            return rutas;
+
+        } catch (RestClientException e) {
+            log.error("❌ Error al consultar rutas tentativas: {}", e.getMessage());
+            throw new RuntimeException("No se pudo obtener las rutas tentativas desde ms-rutas", e);
+        }
+    }
+
 }
