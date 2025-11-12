@@ -14,12 +14,14 @@ public class GWConfig {
     public RouteLocator configurarRutas(RouteLocatorBuilder builder,
                                         @Value("${uri.ms-rutas}") String rutas,
                                         @Value("${uri.ms-solicitudes}") String solicitudes,
-                                        @Value("${uri.ms-camiones}") String camiones) {
+                                        @Value("${uri.ms-camiones}") String camiones,
+                                        @Value("${uri.ms-tarifas}") String tarifas) {
 
         return builder.routes()
                 .route("rutas", r -> r.path("/api/rutas/**").uri(rutas))
                 .route("solicitudes", r -> r.path("/api/solicitudes/**").uri(solicitudes))
                 .route("camiones", r -> r.path("/api/camiones/**").uri(camiones))
+                .route("tarifas", r -> r.path("/api/tarifas/**").uri(tarifas))
                 .build();
     }
 }
