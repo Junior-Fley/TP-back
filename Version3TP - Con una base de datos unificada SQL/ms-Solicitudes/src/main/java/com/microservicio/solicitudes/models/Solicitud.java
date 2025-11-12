@@ -23,7 +23,7 @@ public class Solicitud {
     private Contenedor contenedor;
 
     @ManyToOne
-    @JoinColumn(name = "id_cliente")
+    @JoinColumn(name = "id_cliente", nullable = false)
     private Cliente cliente;
 
     @Column(name = "costo_estimado")

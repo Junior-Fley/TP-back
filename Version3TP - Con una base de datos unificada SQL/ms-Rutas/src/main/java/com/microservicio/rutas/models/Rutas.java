@@ -27,6 +27,15 @@ public class Rutas {
     @Column(name = "cantidad_depositos")
     private Integer cantidadDepositos;
 
+    @Column(name = "distancia_total_km")
+    private Double distanciaTotal;
+
+    @Column(name = "tiempo_estimado_min")
+    private Double  tiempoEstimadoMin;
+
+    @Column(name = "costo_total")
+    private Double costoTotal;
+
     // Relación bidireccional con TRAMO
     // mappedBy = "ruta" indica que la FK está en la tabla tramo
     @JsonManagedReference

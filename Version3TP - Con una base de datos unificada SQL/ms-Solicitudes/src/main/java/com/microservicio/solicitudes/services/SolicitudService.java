@@ -1,7 +1,10 @@
 package com.microservicio.solicitudes.services;
 
 import com.microservicio.solicitudes.clients.RutasApiClient;
+import com.microservicio.solicitudes.dtos.AsignarRutaDTO;
+import com.microservicio.solicitudes.dtos.ContenedorPendienteDTO;
 import com.microservicio.solicitudes.dtos.EstadoContenedorDTO;
+import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
 import com.microservicio.solicitudes.models.Cliente;
 import com.microservicio.solicitudes.models.Estado;
@@ -12,7 +15,9 @@ import com.microservicio.solicitudes.repositories.ContenedorRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SolicitudService {
@@ -136,6 +141,113 @@ public class SolicitudService {
         }
 
         return null;
+    }
+    /**
+     * 🔹 Requerimiento Funcional #4:
+     * Asignar una ruta con todos sus tramos a la solicitud (Operador/Administrador)
+     *
+     * @param idSolicitud ID de la solicitud
+     * @param asignarRutaDTO DTO con información de la ruta a asignar
+     * @return Solicitud actualizada with la ruta asignada
+     */
+    @Transactional
+    public Solicitud asignarRuta(Long idSolicitud, AsignarRutaDTO asignarRutaDTO) {
+        // 1. Validar que la solicitud existe
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        // 2. Validar que la ruta existe en el microservicio de rutas
+        RutaResumenDTO rutaResumen = rutasApiClient.obtenerRutaRaw(asignarRutaDTO.getIdRuta());
+        if (rutaResumen == null) {
+            throw new RuntimeException("Ruta no encontrada con ID: " + asignarRutaDTO.getIdRuta());
+        }
+
+        // 3. Asignar la ruta a la solicitud
+        solicitud.setIdRuta(asignarRutaDTO.getIdRuta());
+
+        // 4. Actualizar costos y tiempos estimados
+        if (asignarRutaDTO.getCostoEstimado() != null) {
+            solicitud.setCostoEstimado(asignarRutaDTO.getCostoEstimado());
+        } else if (rutaResumen.getCostoAproximado() != null) {
+            // Si no se proporciona costo, usar el de la ruta
+            solicitud.setCostoEstimado(rutaResumen.getCostoAproximado());
+        }
+
+        if (asignarRutaDTO.getTiempoEstimado() != null) {
+            solicitud.setTiempoEstimado(asignarRutaDTO.getTiempoEstimado());
+        }
+
+        // 5. Actualizar el estado a "programada" si está en borrador
+        if (solicitud.getEstadoSolicitud() != null &&
+            "borrador".equalsIgnoreCase(solicitud.getEstadoSolicitud().getNombre())) {
+            Estado estadoProgramada = estadoService.obtenerOCrearPorNombre("programada");
+            solicitud.setEstadoSolicitud(estadoProgramada);
+        }
+
+        // 6. Guardar la solicitud actualizada
+        return repo.save(solicitud);
+    }
+
+    /**
+     * Desasignar una ruta de una solicitud
+     *
+     * @param idSolicitud ID de la solicitud
+     * @return Solicitud actualizada sin ruta asignada
+     */
+    @Transactional
+    public Solicitud desasignarRuta(Long idSolicitud) {
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        solicitud.setIdRuta(null);
+        solicitud.setCostoEstimado(null);
+        solicitud.setTiempoEstimado(null);
+
+        // Volver el estado a borrador si estaba programada
+        if (solicitud.getEstadoSolicitud() != null &&
+            "programada".equalsIgnoreCase(solicitud.getEstadoSolicitud().getNombre())) {
+            Estado estadoBorrador = estadoService.obtenerOCrearPorNombre("borrador");
+            solicitud.setEstadoSolicitud(estadoBorrador);
+        }
+
+        return repo.save(solicitud);
+    }
+
+    /**
+     * 🔹 Requerimiento Funcional #5:
+     * Consultar todos los contenedores pendientes de entrega y su ubicación/estado
+     * (Operador/Administrador)
+     *
+     * Retorna solo los contenedores con estado "Pendiente de entrega"
+     *
+     * @return Lista de contenedores pendientes con su información completa
+     */
+    public List<ContenedorPendienteDTO> obtenerContenedoresPendientes() {
+
+        // Obtener todas las solicitudes
+        List<Solicitud> solicitudes = repo.findAll();
+
+        // Filtrar solo contenedores con estado "Pendiente de entrega"
+        return solicitudes.stream()
+                // Filtrar solo los contenedores con estado "Pendiente de entrega"
+                .filter(s -> s.getContenedor() != null &&
+                            s.getContenedor().getEstado() != null &&
+                            "Pendiente de entrega".equalsIgnoreCase(s.getContenedor().getEstado()))
+                // Mapear a DTO
+                .map(s -> new ContenedorPendienteDTO(
+                        s.getContenedor().getIdContenedor(),
+                        s.getNumeroSolicitud(),
+                        s.getContenedor().getEstado(),
+                        s.getEstadoSolicitud() != null ? s.getEstadoSolicitud().getNombre() : "Sin estado",
+                        s.getIdRuta(),
+                        s.getCliente() != null ? s.getCliente().getNombre() + " " + s.getCliente().getApellido() : "Sin cliente",
+                        s.getCliente() != null ? s.getCliente().getDni() : null,
+                        s.getContenedor().getPeso(),
+                        s.getContenedor().getVolumen(),
+                        s.getCostoEstimado(),
+                        s.getTiempoEstimado()
+                ))
+                .collect(Collectors.toList());
     }
 
 }

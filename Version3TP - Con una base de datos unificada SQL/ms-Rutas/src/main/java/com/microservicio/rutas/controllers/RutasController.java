@@ -2,6 +2,7 @@ package com.microservicio.rutas.controllers;
 
 
 import com.microservicio.rutas.dtos.RutaResumenDTO;
+import com.microservicio.rutas.dtos.RutaTentativaDTO;
 import com.microservicio.rutas.models.Rutas;
 import com.microservicio.rutas.services.RutasService;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,22 @@ public class RutasController {
         RutaResumenDTO resumen = service.obtenerResumen(id);
         if (resumen == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(resumen);
+    }
+
+    // 🔹 Requerimiento Funcional #3: Consultar rutas tentativas con todos los tramos
+    // sugeridos y el tiempo y costo estimados (Operador / Administrador)
+    @GetMapping("/tentativas")
+    public ResponseEntity<List<RutaTentativaDTO>> obtenerRutasTentativas() {
+        List<RutaTentativaDTO> rutasTentativas = service.obtenerRutasTentativas();
+        return ResponseEntity.ok(rutasTentativas);
+    }
+
+    // 🔹 Obtener una ruta tentativa específica por ID con todos sus tramos
+    @GetMapping("/{id}/tentativa")
+    public ResponseEntity<RutaTentativaDTO> obtenerRutaTentativaPorId(@PathVariable("id") Long id) {
+        RutaTentativaDTO ruta = service.obtenerRutaTentativaPorId(id);
+        if (ruta == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(ruta);
     }
 
 }

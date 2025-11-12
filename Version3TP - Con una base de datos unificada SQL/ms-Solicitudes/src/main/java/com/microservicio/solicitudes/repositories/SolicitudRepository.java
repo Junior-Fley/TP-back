@@ -3,6 +3,8 @@ package com.microservicio.solicitudes.repositories;
 import com.microservicio.solicitudes.models.Solicitud;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
 
     /**

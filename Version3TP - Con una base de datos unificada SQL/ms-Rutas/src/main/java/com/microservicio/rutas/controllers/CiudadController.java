@@ -24,7 +24,7 @@ public class CiudadController {
 
     // GET: obtener ciudad por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Ciudad> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<Ciudad> obtenerPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -39,7 +39,7 @@ public class CiudadController {
 
     // PUT: actualizar ciudad existente
     @PutMapping("/{id}")
-    public ResponseEntity<Ciudad> actualizar(@PathVariable Long id, @RequestBody Ciudad ciudad) {
+    public ResponseEntity<Ciudad> actualizar(@PathVariable("id") Long id, @RequestBody Ciudad ciudad) {
         try {
             Ciudad actualizada = service.actualizar(id, ciudad);
             return ResponseEntity.ok(actualizada);
@@ -50,7 +50,7 @@ public class CiudadController {
 
     // DELETE: eliminar ciudad por ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }

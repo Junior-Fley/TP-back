@@ -17,6 +17,6 @@ public class EstadoTramo {
     @Column(name = "id_estado")
     private Long idEstado;
 
-    @Column(name = "name", nullable = false, length = 50)
+    @Column(name = "nombre", nullable = false, length = 50)
     private String nombre;
 }
