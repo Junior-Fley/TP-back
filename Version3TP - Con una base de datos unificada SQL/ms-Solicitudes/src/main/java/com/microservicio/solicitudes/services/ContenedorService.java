@@ -30,6 +30,7 @@ public class ContenedorService {
                 new RuntimeException("Contenedor no encontrado con ID " + id));
         existente.setPeso(actualizado.getPeso());
         existente.setVolumen(actualizado.getVolumen());
+        existente.setEstado(actualizado.getEstado());
         return repo.save(existente);
     }
 

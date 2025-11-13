@@ -22,7 +22,7 @@ public class CamionController {
     }
 
     @GetMapping("/{id}")
-    public Camion obtenerPorId(@PathVariable Long id) {
+    public Camion obtenerPorId(@PathVariable("id") Long id) {
         return service.obtenerPorId(id);
     }
 
@@ -32,7 +32,7 @@ public class CamionController {
     }
 
     @PutMapping("/{id}")
-    public Camion actualizar(@PathVariable Long id, @RequestBody Camion camion) {
+    public Camion actualizar(@PathVariable("id") Long id, @RequestBody Camion camion) {
         //camion.setIdCamion(id);
         return service.guardar(camion);
     }

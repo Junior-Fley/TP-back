@@ -19,11 +19,11 @@ public class Solicitud {
     private Long numeroSolicitud;
 
     @ManyToOne
-    @JoinColumn(name = "id_contenedor", insertable = false, updatable = false)
+    @JoinColumn(name = "id_contenedor")
     private Contenedor contenedor;
 
     @ManyToOne
-    @JoinColumn(name = "id_cliente", insertable = false, updatable = false)
+    @JoinColumn(name = "id_cliente", nullable = false)
     private Cliente cliente;
 
     @Column(name = "costo_estimado")

@@ -34,6 +34,16 @@ services:
     networks:
       - app-net
 
+  ms-Tarifas:
+    build: ./ms-Tarifas
+    container_name: ms_tarifas
+    ports:
+      - "8092:8092"
+    volumes:
+      - ./database:/app/database
+    networks:
+      - app-net
+
   api-gateway:
     build: ./Gateway
     container_name: api_gateway

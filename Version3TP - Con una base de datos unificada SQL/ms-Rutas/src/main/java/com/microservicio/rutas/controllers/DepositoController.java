@@ -24,7 +24,7 @@ public class DepositoController {
 
     // GET: obtener por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Deposito> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<Deposito> obtenerPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -39,7 +39,7 @@ public class DepositoController {
 
     // PUT: actualizar depósito existente
     @PutMapping("/{id}")
-    public ResponseEntity<Deposito> actualizar(@PathVariable Long id, @RequestBody Deposito deposito) {
+    public ResponseEntity<Deposito> actualizar(@PathVariable("id") Long id, @RequestBody Deposito deposito) {
         try {
             Deposito actualizado = service.actualizar(id, deposito);
             return ResponseEntity.ok(actualizado);
@@ -50,7 +50,7 @@ public class DepositoController {
 
     // DELETE: eliminar por ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }

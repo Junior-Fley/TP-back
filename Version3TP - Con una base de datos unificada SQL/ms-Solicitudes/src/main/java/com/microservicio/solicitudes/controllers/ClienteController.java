@@ -23,7 +23,7 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<Cliente> obtenerPorId(@PathVariable("id") Long id) {
         Cliente cliente = service.obtenerPorId(id);
         if (cliente == null) {
             return ResponseEntity.notFound().build();
@@ -32,7 +32,7 @@ public class ClienteController {
     }
 
     @GetMapping("/dni/{dni}")
-    public ResponseEntity<Cliente> obtenerPorDni(@PathVariable String dni) {
+    public ResponseEntity<Cliente> obtenerPorDni(@PathVariable("dni") String dni) {
         Cliente cliente = service.obtenerPorDni(dni);
         if (cliente == null) {
             return ResponseEntity.notFound().build();
@@ -41,7 +41,7 @@ public class ClienteController {
     }
 
     @GetMapping("/mail/{mail}")
-    public ResponseEntity<Cliente> obtenerPorMail(@PathVariable String mail) {
+    public ResponseEntity<Cliente> obtenerPorMail(@PathVariable("mail") String mail) {
         Cliente cliente = service.obtenerPorMail(mail);
         if (cliente == null) {
             return ResponseEntity.notFound().build();
@@ -60,7 +60,7 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody Cliente actualizado) {
+    public ResponseEntity<?> actualizar(@PathVariable("id") Long id, @RequestBody Cliente actualizado) {
         try {
             Cliente cliente = service.actualizar(id, actualizado);
             return ResponseEntity.ok(cliente);
@@ -70,7 +70,7 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }

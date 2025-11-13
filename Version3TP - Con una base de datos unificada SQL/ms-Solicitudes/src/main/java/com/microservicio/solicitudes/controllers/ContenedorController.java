@@ -20,7 +20,7 @@ public class ContenedorController {
     }
 
     @GetMapping("/{id}")
-    public Contenedor obtenerPorId(@PathVariable Long id) {
+    public Contenedor obtenerPorId(@PathVariable("id") Long id) {
         return service.obtenerPorId(id);
     }
 
@@ -30,12 +30,12 @@ public class ContenedorController {
     }
 
     @PutMapping("/{id}")
-    public Contenedor actualizar(@PathVariable Long id, @RequestBody Contenedor actualizado) {
+    public Contenedor actualizar(@PathVariable("id") Long id, @RequestBody Contenedor actualizado) {
         return service.actualizar(id, actualizado);
     }
 
     @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Long id) {
+    public void eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
     }
 }

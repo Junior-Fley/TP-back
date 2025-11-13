@@ -24,7 +24,7 @@ public class TramoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Tramo> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<Tramo> obtenerPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -37,8 +37,20 @@ public class TramoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Asigna un camión a un tramo de traslado de contenedor.
+     * PUT /api/tramos/{idTramo}/asignar-camion/{idCamion}
+     */
+    @PutMapping("/{idTramo}/asignar-camion/{idCamion}")
+    public ResponseEntity<Tramo> asignarCamion(
+            @PathVariable("idTramo") Long idTramo,
+            @PathVariable("idCamion") Long idCamion) {
+        Tramo tramoActualizado = service.asignarCamion(idTramo, idCamion);
+        return ResponseEntity.ok(tramoActualizado);
     }
 }

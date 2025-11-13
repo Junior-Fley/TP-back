@@ -16,4 +16,5 @@ public class Contenedor {
     private Long idContenedor;
     private Double peso;
     private Double volumen;
+    private String estado; // Ejemplo: "Pendiente de entrega", "En tránsito", "Entregado", etc."
 }
