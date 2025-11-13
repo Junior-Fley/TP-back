@@ -1,11 +1,13 @@
 package com.microservicio.rutas.services;
 
 import com.microservicio.rutas.clients.CamionesApiClient;
+import com.microservicio.rutas.dtos.CostoEntregaDTO;
 import com.microservicio.rutas.models.Tramo;
 import com.microservicio.rutas.repositories.TramoRepository;
 import lombok.*;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,4 +56,43 @@ public class TramoService {
         tramo.setIdCamion(idCamion);
         return repo.save(tramo);
     }
+
+    public CostoEntregaDTO calcularCostoEntrega(Long idRuta) {
+        // 1️⃣ Buscar todos los tramos de la ruta
+        Optional<Tramo> tramos = repo.findById(idRuta);
+
+        if (tramos.isEmpty()) {
+            throw new RuntimeException("No se encontraron tramos para la ruta " + idRuta);
+        }
+
+        // 2️⃣ Calcular distancia total
+        double distanciaTotal = tramos.stream()
+                .mapToDouble(Tramo::getDistanciaKm)
+                .sum();
+
+        // 3️⃣ Calcular costo por distancia
+        double costoPorKm = 10.0; // ejemplo
+        double costoDistancia = distanciaTotal * costoPorKm;
+
+        // 4️⃣ Calcular costo por peso y volumen (ejemplo fijo, normalmente viene del microservicio de transporte)
+        double peso = 1000; // kg
+        double volumen = 5; // m3
+        double costoPesoVolumen = (peso * 0.5) + (volumen * 100);
+
+        // 5️⃣ Calcular estadía (horas en depósitos)
+        double costoPorEstadia = tramos.stream()
+                .mapToDouble(t -> {
+                    if (t.getFechaHoraInicio() != null && t.getFechaHoraFin() != null) {
+                        long horas = Duration.between(t.getFechaHoraInicio(), t.getFechaHoraFin()).toHours();
+                        return horas * 50; // $50 por hora
+                    }
+                    return 0.0;
+                }).sum();
+
+        // 6️⃣ Sumar todo
+        double total = costoDistancia + costoPesoVolumen + costoPorEstadia;
+
+        return new CostoEntregaDTO(distanciaTotal, costoDistancia, costoPesoVolumen, costoPorEstadia, total);
+    }
+
 }

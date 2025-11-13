@@ -1,6 +1,7 @@
 package com.microservicio.rutas.controllers;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.microservicio.rutas.dtos.CostoEntregaDTO;
 import com.microservicio.rutas.models.Tramo;
 import com.microservicio.rutas.services.TramoService;
 import lombok.*;
@@ -57,5 +58,12 @@ public class TramoController {
             @PathVariable("idCamion") Long idCamion) {
         Tramo tramoActualizado = service.asignarCamion(idTramo, idCamion);
         return ResponseEntity.ok(tramoActualizado);
+    }
+
+    // ✅ Calcular costo total de una entrega (requerimiento funcional 8)
+    @GetMapping("/costo/{idRuta}")
+    public ResponseEntity<CostoEntregaDTO> calcularCostoEntrega(@PathVariable Long idRuta) {
+        CostoEntregaDTO costo = service.calcularCostoEntrega(idRuta);
+        return ResponseEntity.ok(costo);
     }
 }
