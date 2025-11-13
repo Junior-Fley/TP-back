@@ -2,6 +2,9 @@ package com.microservicio.rutas.controllers;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.microservicio.rutas.dtos.CostoEntregaDTO;
+import com.microservicio.rutas.dtos.CostoRealDTO;
+import com.microservicio.rutas.dtos.FinalizarTramoDTO;
+import com.microservicio.rutas.dtos.IniciarTramoDTO;
 import com.microservicio.rutas.models.Tramo;
 import com.microservicio.rutas.services.TramoService;
 import lombok.*;
@@ -10,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tramos")
@@ -40,6 +45,16 @@ public class TramoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
 
+    /**
+     * Actualiza cualquier dato de un tramo
+     * PUT /api/tramos/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Tramo> actualizar(@PathVariable("id") Long id, @RequestBody Tramo tramo) {
+        Tramo tramoActualizado = service.actualizar(id, tramo);
+        return ResponseEntity.ok(tramoActualizado);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
@@ -58,6 +73,80 @@ public class TramoController {
             @PathVariable("idCamion") Long idCamion) {
         Tramo tramoActualizado = service.asignarCamion(idTramo, idCamion);
         return ResponseEntity.ok(tramoActualizado);
+    }
+
+    /**
+     * 🚚 Registra el INICIO de un tramo de traslado (Transportista)
+     * POST /api/tramos/{id}/iniciar
+     *
+     * Requerimiento Funcional: "Determinar el inicio o fin de un tramo de traslado. (Transportista)"
+     */
+    @PostMapping("/{id}/iniciar")
+//    @PreAuthorize("hasRole('TRANSPORTISTA') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> iniciarTramo(
+            @PathVariable("id") Long id,
+            @RequestBody(required = false) IniciarTramoDTO dto) {
+
+        if (dto == null) {
+            dto = new IniciarTramoDTO();
+        }
+        dto.setIdTramo(id);
+
+        Tramo tramoIniciado = service.iniciarTramo(id, dto);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Tramo iniciado exitosamente");
+        response.put("tramo", tramoIniciado);
+        response.put("fechaHoraInicio", tramoIniciado.getFechaHoraInicio());
+        response.put("estado", tramoIniciado.getEstado().getNombre());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 🏁 Registra la FINALIZACIÓN de un tramo y calcula el costo real (Transportista)
+     * POST /api/tramos/{id}/finalizar
+     *
+     * Requerimiento Funcional: "Determinar el inicio o fin de un tramo de traslado. (Transportista)"
+     * Calcula el costo real según: kilometraje + combustible + estadía + gestión
+     */
+    @PostMapping("/{id}/finalizar")
+//    @PreAuthorize("hasRole('TRANSPORTISTA') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> finalizarTramo(
+            @PathVariable("id") Long id,
+            @RequestBody(required = false) FinalizarTramoDTO dto) {
+
+        if (dto == null) {
+            dto = new FinalizarTramoDTO();
+        }
+        dto.setIdTramo(id);
+
+        Tramo tramoFinalizado = service.finalizarTramo(id, dto);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Tramo finalizado exitosamente");
+        response.put("tramo", tramoFinalizado);
+        response.put("fechaHoraInicio", tramoFinalizado.getFechaHoraInicio());
+        response.put("fechaHoraFin", tramoFinalizado.getFechaHoraFin());
+        response.put("costoReal", tramoFinalizado.getCostoReal());
+        response.put("estado", tramoFinalizado.getEstado().getNombre());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 💰 Obtiene el detalle del cálculo del costo real de un tramo
+     * GET /api/tramos/{id}/costo-real
+     */
+    @GetMapping("/{id}/costo-real")
+    public ResponseEntity<CostoRealDTO> obtenerCostoReal(@PathVariable("id") Long id) {
+        Tramo tramo = service.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Tramo no encontrado"));
+
+        CostoRealDTO costoReal = service.calcularCostoReal(tramo);
+        return ResponseEntity.ok(costoReal);
     }
 
     // ✅ Calcular costo total de una entrega (requerimiento funcional 8)

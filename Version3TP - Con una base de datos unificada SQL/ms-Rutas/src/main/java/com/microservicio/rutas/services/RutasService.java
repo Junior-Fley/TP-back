@@ -7,6 +7,7 @@ import com.microservicio.rutas.dtos.TramoSugeridoDTO;
 import com.microservicio.rutas.models.Rutas;
 import com.microservicio.rutas.models.Tramo;
 import com.microservicio.rutas.repositories.RutasRepository;
+import com.microservicio.rutas.repositories.TramoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class RutasService {
 
     private final RutasRepository repo;
+    private final TramoRepository tramoRepository;
 
     // 🔹 Obtener todas las rutas
     public List<Rutas> obtenerTodas() {
@@ -32,6 +34,12 @@ public class RutasService {
 
     // 🔹 Crear una nueva ruta
     public Rutas crear(Rutas ruta) {
+        // ⚠️ FIX: Asegurar que los tramos tengan la referencia bidireccional a la ruta
+        if (ruta.getTramos() != null && !ruta.getTramos().isEmpty()) {
+            for (Tramo tramo : ruta.getTramos()) {
+                tramo.setRuta(ruta);
+            }
+        }
         return repo.save(ruta);
     }
 
@@ -164,6 +172,134 @@ public class RutasService {
             return "Sin depósito asignado";
         }
         return deposito.getNombre() != null ? deposito.getNombre() : "Depósito ID: " + deposito.getIdDeposito();
+    }
+
+    /**
+     * Obtiene todos los tramos de una ruta específica
+     * Necesario para calcular el costo final de una solicitud
+     */
+    public List<Tramo> obtenerTramosPorRuta(Long idRuta) {
+        // Verificar que la ruta existe
+        if (!repo.existsById(idRuta)) {
+            throw new RuntimeException("Ruta no encontrada con ID: " + idRuta);
+        }
+
+        // Buscar tramos directamente por id_ruta usando el TramoRepository
+        List<Tramo> tramos = tramoRepository.findByRutaIdRuta(idRuta);
+
+        if (tramos == null || tramos.isEmpty()) {
+            throw new RuntimeException("No se encontraron tramos para la ruta ID: " + idRuta);
+        }
+
+        return tramos;
+    }
+
+    /**
+     * 🛠️ UTILIDAD: Corrige la relación bidireccional de tramos que no tienen id_ruta asignado
+     * Este método busca todos los tramos que están asociados a una ruta por la relación JPA
+     * pero que no tienen el campo id_ruta en la base de datos
+     */
+    public String corregirRelacionTramos() {
+        // Obtener TODOS los tramos sin filtro
+        List<Tramo> todosLosTramos = tramoRepository.findAll();
+        int tramosCorregidos = 0;
+        int tramosSinRuta = 0;
+
+        for (Tramo tramo : todosLosTramos) {
+            // Si el tramo no tiene ruta asignada, es un tramo huérfano
+            if (tramo.getRuta() == null || tramo.getRuta().getIdRuta() == null) {
+                tramosSinRuta++;
+                // Intentar encontrar la ruta buscando en todas las rutas
+                // Este es un caso donde necesitamos asignar manualmente
+                // Por ahora solo los contamos
+            }
+        }
+
+        // Ahora intentamos con el enfoque de cargar las rutas con FETCH
+        List<Long> idsRutas = repo.findAll().stream()
+                .map(Rutas::getIdRuta)
+                .collect(Collectors.toList());
+
+        for (Long idRuta : idsRutas) {
+            try {
+                Rutas ruta = repo.findByIdWithTramos(idRuta).orElse(null);
+                if (ruta != null && ruta.getTramos() != null) {
+                    for (Tramo tramo : ruta.getTramos()) {
+                        if (tramo.getRuta() == null || !tramo.getRuta().getIdRuta().equals(ruta.getIdRuta())) {
+                            tramo.setRuta(ruta);
+                            tramoRepository.save(tramo);
+                            tramosCorregidos++;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Continuar con la siguiente ruta
+            }
+        }
+
+        return String.format("Se corrigieron %d tramos. Tramos huérfanos encontrados: %d",
+                tramosCorregidos, tramosSinRuta);
+    }
+
+    /**
+     * 🛠️ UTILIDAD: Asigna manualmente un tramo específico a una ruta
+     */
+    public String asignarTramoARuta(Long idRuta, Long idTramo) {
+        // Verificar que la ruta existe
+        Rutas ruta = repo.findById(idRuta)
+                .orElseThrow(() -> new RuntimeException("Ruta no encontrada con ID: " + idRuta));
+
+        // Verificar que el tramo existe
+        Tramo tramo = tramoRepository.findById(idTramo)
+                .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + idTramo));
+
+        // Asignar la ruta al tramo
+        tramo.setRuta(ruta);
+        tramoRepository.save(tramo);
+
+        return String.format("Tramo ID %d asignado correctamente a Ruta ID %d", idTramo, idRuta);
+    }
+
+    /**
+     * 🛠️ DEBUG: Lista todos los tramos con su información de asignación a rutas
+     */
+    public List<java.util.Map<String, Object>> listarTodosLosTramosConEstado() {
+        List<Tramo> todosLosTramos = tramoRepository.findAll();
+
+        return todosLosTramos.stream()
+                .map(tramo -> {
+                    java.util.Map<String, Object> info = new java.util.HashMap<>();
+                    info.put("idTramo", tramo.getIdTramo());
+                    info.put("idRuta", tramo.getRuta() != null ? tramo.getRuta().getIdRuta() : null);
+                    info.put("rutaAsignada", tramo.getRuta() != null ? "Sí" : "NO - HUÉRFANO");
+                    info.put("estado", tramo.getEstado() != null ? tramo.getEstado().getNombre() : "sin estado");
+                    info.put("origen", tramo.getDepositoOrigen() != null ? tramo.getDepositoOrigen().getNombre() : "sin origen");
+                    info.put("destino", tramo.getDepositoDestino() != null ? tramo.getDepositoDestino().getNombre() : "sin destino");
+                    return info;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 🛠️ UTILIDAD: Recalcula el campo cantidadTramos de todas las rutas basándose en los tramos reales
+     */
+    public String recalcularCantidadTramos() {
+        List<Rutas> todasLasRutas = repo.findAll();
+        int rutasActualizadas = 0;
+
+        for (Rutas ruta : todasLasRutas) {
+            // Contar los tramos reales de esta ruta
+            int cantidadReal = tramoRepository.findByRutaIdRuta(ruta.getIdRuta()).size();
+
+            // Si la cantidad actual es diferente, actualizar
+            if (ruta.getCantidadTramos() == null || ruta.getCantidadTramos() != cantidadReal) {
+                ruta.setCantidadTramos(cantidadReal);
+                repo.save(ruta);
+                rutasActualizadas++;
+            }
+        }
+
+        return String.format("Se actualizaron %d rutas con la cantidad correcta de tramos", rutasActualizadas);
     }
 
 }

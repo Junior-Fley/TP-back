@@ -16,5 +16,6 @@ public class CamionDTO {
     private boolean disponibilidad;
     private double capacidadPeso;
     private double capacidadVolumen;
+    private double costoBaseKm;
+    private double consumoCombustibleKm;
 }
-

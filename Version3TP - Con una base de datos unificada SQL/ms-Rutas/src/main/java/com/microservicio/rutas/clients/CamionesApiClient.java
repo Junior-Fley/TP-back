@@ -57,4 +57,27 @@ public class CamionesApiClient {
             return null;
         }
     }
+
+    /**
+     * Actualiza la disponibilidad de un camión
+     * @param idCamion ID del camión
+     * @param disponible true para marcar como disponible, false para ocupado
+     */
+    public void actualizarDisponibilidad(Long idCamion, boolean disponible) {
+        try {
+            log.info("🔄 Actualizando disponibilidad del camión ID {} a: {}",
+                    idCamion, disponible ? "DISPONIBLE" : "OCUPADO");
+
+            camionesRestClient.patch()
+                    .uri("/{id}/disponibilidad?disponible={disponible}", idCamion, disponible)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            log.info("✅ Disponibilidad actualizada exitosamente");
+
+        } catch (Exception e) {
+            log.error("❌ Error al actualizar disponibilidad del camión ID {}: {}", idCamion, e.getMessage());
+            throw new RuntimeException("No se pudo actualizar la disponibilidad del camión: " + e.getMessage());
+        }
+    }
 }

@@ -43,4 +43,17 @@ public class CamionController {
     public void eliminar(@PathVariable Long id) {
         service.eliminar(id);
     }
+
+    /**
+     * 🔄 Actualiza la disponibilidad de un camión
+     * PATCH /api/camiones/{id}/disponibilidad?disponible=true
+     *
+     * Usado cuando un transportista inicia o finaliza un tramo
+     */
+    @PatchMapping("/{id}/disponibilidad")
+    public Camion actualizarDisponibilidad(
+            @PathVariable("id") Long id,
+            @RequestParam("disponible") boolean disponible) {
+        return service.actualizarDisponibilidad(id, disponible);
+    }
 }

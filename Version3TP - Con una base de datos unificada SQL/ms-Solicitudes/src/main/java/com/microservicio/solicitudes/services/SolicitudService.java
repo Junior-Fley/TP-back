@@ -6,6 +6,7 @@ import com.microservicio.solicitudes.dtos.ContenedorPendienteDTO;
 import com.microservicio.solicitudes.dtos.EstadoContenedorDTO;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
+import com.microservicio.solicitudes.dtos.TramoDTO;
 import com.microservicio.solicitudes.models.Cliente;
 import com.microservicio.solicitudes.models.Estado;
 import com.microservicio.solicitudes.models.Solicitud;
@@ -13,13 +14,20 @@ import com.microservicio.solicitudes.models.Contenedor;
 import com.microservicio.solicitudes.repositories.SolicitudRepository;
 import com.microservicio.solicitudes.repositories.ContenedorRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class SolicitudService {
 
     private final SolicitudRepository repo;
@@ -250,4 +258,126 @@ public class SolicitudService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 🏁 Finaliza una solicitud y calcula el costo final real
+     *
+     * Requerimiento: "Al finalizar registrar el cálculo de tiempo real y el cálculo de costo real en la solicitud."
+     *
+     * Suma todos los costos reales de los tramos de la ruta asociada.
+     * Actualiza costoFinal y tiempoReal en la solicitud.
+     * Cambia el estado a "entregada".
+     *
+     * @param idSolicitud ID de la solicitud a finalizar
+     * @return Solicitud finalizada with costos reales
+     */
+    @Transactional
+    public Solicitud finalizarSolicitud(Long idSolicitud) {
+        log.info("🏁 Finalizando solicitud ID: {}", idSolicitud);
+
+        // 1. Obtener la solicitud
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        // 2. Validar que tiene ruta asignada
+        if (solicitud.getIdRuta() == null) {
+            throw new RuntimeException("La solicitud no tiene una ruta asignada");
+        }
+
+        // 3. Obtener todos los tramos de la ruta
+        List<TramoDTO> tramos = rutasApiClient.obtenerTramosPorRuta(solicitud.getIdRuta());
+
+        if (tramos == null || tramos.isEmpty()) {
+            throw new RuntimeException("No se encontraron tramos para la ruta ID: " + solicitud.getIdRuta());
+        }
+
+        // 4. Validar que todos los tramos estén finalizados
+        boolean todosFinalizados = tramos.stream()
+                .allMatch(t -> "finalizado".equalsIgnoreCase(t.getEstado()));
+
+        if (!todosFinalizados) {
+            throw new RuntimeException("No todos los tramos de la ruta están finalizados. " +
+                    "Finalice todos los tramos antes de finalizar la solicitud.");
+        }
+
+        // 5. Calcular el costo final sumando todos los costos reales de los tramos
+        BigDecimal costoFinal = tramos.stream()
+                .map(TramoDTO::getCostoReal)
+                .filter(costo -> costo != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        solicitud.setCostoFinal(costoFinal);
+
+        // 6. Calcular el tiempo real (en horas)
+        LocalDateTime primerInicio = tramos.stream()
+                .map(TramoDTO::getFechaHoraInicio)
+                .filter(fecha -> fecha != null)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
+
+        LocalDateTime ultimoFin = tramos.stream()
+                .map(TramoDTO::getFechaHoraFin)
+                .filter(fecha -> fecha != null)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+
+        if (primerInicio != null && ultimoFin != null) {
+            long horasReales = ChronoUnit.HOURS.between(primerInicio, ultimoFin);
+            solicitud.setTiempoReal((int) horasReales);
+        }
+
+        // 7. Actualizar estado a "entregada"
+        Estado estadoEntregada = estadoService.obtenerOCrearPorNombre("entregada");
+        solicitud.setEstadoSolicitud(estadoEntregada);
+
+        // 8. Guardar la solicitud actualizada
+        Solicitud solicitudFinalizada = repo.save(solicitud);
+
+        log.info("✅ Solicitud finalizada. Costo final: ${}, Tiempo real: {} horas",
+                costoFinal, solicitud.getTiempoReal());
+        log.info("📊 Diferencia con estimado: ${} (Estimado: ${}, Real: ${})",
+                solicitud.getCostoEstimado() != null
+                    ? costoFinal.subtract(solicitud.getCostoEstimado())
+                    : "N/A",
+                solicitud.getCostoEstimado(),
+                costoFinal);
+
+        return solicitudFinalizada;
+    }
+
+    /**
+     * Obtiene un resumen comparativo de costos estimados vs reales de una solicitud
+     */
+    public Map<String, Object> obtenerResumenCostos(Long idSolicitud) {
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        Map<String, Object> resumen = new HashMap<>();
+        resumen.put("idSolicitud", idSolicitud);
+        resumen.put("costoEstimado", solicitud.getCostoEstimado());
+        resumen.put("costoFinal", solicitud.getCostoFinal());
+        resumen.put("tiempoEstimado", solicitud.getTiempoEstimado());
+        resumen.put("tiempoReal", solicitud.getTiempoReal());
+        resumen.put("estado", solicitud.getEstadoSolicitud() != null
+                ? solicitud.getEstadoSolicitud().getNombre()
+                : "Sin estado");
+
+        if (solicitud.getCostoEstimado() != null && solicitud.getCostoFinal() != null) {
+            BigDecimal diferencia = solicitud.getCostoFinal().subtract(solicitud.getCostoEstimado());
+            resumen.put("diferenciaCosto", diferencia);
+
+            if (solicitud.getCostoEstimado().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal porcentaje = diferencia
+                        .divide(solicitud.getCostoEstimado(), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+                resumen.put("porcentajeDiferencia", porcentaje);
+            }
+        }
+
+        if (solicitud.getTiempoEstimado() != null && solicitud.getTiempoReal() != null) {
+            int diferenciaTiempo = solicitud.getTiempoReal() - solicitud.getTiempoEstimado();
+            resumen.put("diferenciaTiempo", diferenciaTiempo);
+        }
+
+        return resumen;
+    }
 }

@@ -202,4 +202,47 @@ public class SolicitudController {
         }
     }
 
+    /**
+     * 🏁 Finaliza una solicitud y calcula el costo final real
+     * POST /api/solicitudes/{id}/finalizar
+     *
+     * Requerimiento: "Al finalizar registrar el cálculo de tiempo real y el cálculo de costo real en la solicitud."
+     *
+     * Suma todos los costos reales de los tramos de la ruta asociada.
+     * Valida que todos los tramos estén finalizados.
+     * Actualiza costoFinal y tiempoReal en la solicitud.
+     * Cambia el estado a "entregada".
+     */
+    @PostMapping("/{id}/finalizar")
+    public ResponseEntity<?> finalizarSolicitud(@PathVariable("id") Long id) {
+        try {
+            Solicitud solicitudFinalizada = service.finalizarSolicitud(id);
+            return ResponseEntity.ok(solicitudFinalizada);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 📊 Obtiene un resumen comparativo de costos estimados vs reales
+     * GET /api/solicitudes/{id}/resumen-costos
+     *
+     * Devuelve:
+     * - Costo estimado vs costo final
+     * - Tiempo estimado vs tiempo real
+     * - Diferencias y porcentajes
+     */
+    @GetMapping("/{id}/resumen-costos")
+    public ResponseEntity<?> obtenerResumenCostos(@PathVariable("id") Long id) {
+        try {
+            return ResponseEntity.ok(service.obtenerResumenCostos(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
+        }
+    }
+
 }

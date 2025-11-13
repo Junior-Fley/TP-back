@@ -75,4 +75,79 @@ public class RutasController {
         return ResponseEntity.ok(ruta);
     }
 
+    /**
+     * 📦 Obtener todos los tramos de una ruta específica
+     * GET /api/rutas/{idRuta}/tramos
+     *
+     * Necesario para calcular el costo final de una solicitud
+     */
+    @GetMapping("/{idRuta}/tramos")
+    public ResponseEntity<?> obtenerTramosPorRuta(@PathVariable("idRuta") Long idRuta) {
+        try {
+            List<com.microservicio.rutas.models.Tramo> tramos = service.obtenerTramosPorRuta(idRuta);
+            return ResponseEntity.ok(tramos);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🛠️ UTILIDAD: Corrige la relación bidireccional de tramos huérfanos
+     * POST /api/rutas/corregir-tramos
+     *
+     * Este endpoint corrige los tramos que no tienen id_ruta asignado en la base de datos
+     */
+    @PostMapping("/corregir-tramos")
+    public ResponseEntity<String> corregirRelacionTramos() {
+        try {
+            String resultado = service.corregirRelacionTramos();
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🛠️ UTILIDAD: Asigna manualmente un tramo a una ruta
+     * PUT /api/rutas/{idRuta}/asignar-tramo/{idTramo}
+     */
+    @PutMapping("/{idRuta}/asignar-tramo/{idTramo}")
+    public ResponseEntity<String> asignarTramoARuta(
+            @PathVariable("idRuta") Long idRuta,
+            @PathVariable("idTramo") Long idTramo) {
+        try {
+            String resultado = service.asignarTramoARuta(idRuta, idTramo);
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🛠️ DEBUG: Lista todos los tramos y su estado de asignación a rutas
+     * GET /api/rutas/debug/tramos
+     */
+    @GetMapping("/debug/tramos")
+    public ResponseEntity<?> listarTodosLosTramosConEstado() {
+        try {
+            return ResponseEntity.ok(service.listarTodosLosTramosConEstado());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🛠️ UTILIDAD: Recalcula el campo cantidadTramos de todas las rutas
+     * POST /api/rutas/recalcular-cantidad-tramos
+     */
+    @PostMapping("/recalcular-cantidad-tramos")
+    public ResponseEntity<String> recalcularCantidadTramos() {
+        try {
+            String resultado = service.recalcularCantidadTramos();
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
 }

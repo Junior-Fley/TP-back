@@ -1,0 +1,1020 @@
+# PRUEBAS - ENDPOINTS TARIFAS Y COSTOS REALES
+# Archivo para usar con REST Client (VS Code) o IntelliJ HTTP Client
+
+### Variables
+@baseUrlTarifas = http://localhost:8092
+@baseUrlTransporte = http://localhost:8093
+@baseUrlRutas = http://localhost:8091
+@baseUrlSolicitudes = http://localhost:8090
+
+###############################################
+# PASO 0: VERIFICACIÓN DE DATOS BASE
+###############################################
+
+### 0.1. Ver todas las tarifas
+GET {{baseUrlTarifas}}/api/tarifas
+
+### 0.2. Inicializar tarifas por defecto (si no existen)
+POST {{baseUrlTarifas}}/api/tarifas/inicializar
+
+### 0.3. Ver todos los camiones
+GET {{baseUrlTransporte}}/api/camiones
+
+### 0.4. Crear camión de prueba con costos
+POST {{baseUrlTransporte}}/api/camiones
+Content-Type: application/json
+
+{
+  "patente": "TEST999",
+  "telefono": "1234567890",
+  "capacidadPeso": 5000,
+  "capacidadVolumen": 30,
+  "disponibilidad": true,
+  "costoBaseKm": 7.50,
+  "consumoCombustibleKm": 0.35,
+  "transportista": {
+    "nombre": "Carlos",
+    "apellido": "Rodriguez",
+    "dni": "11223344",
+    "telefono": "1122334455"
+  }
+}
+
+### 0.5. Ver todos los depósitos
+GET {{baseUrlRutas}}/api/depositos
+
+### 0.6. Crear depósito de prueba con costo de estadía
+POST {{baseUrlRutas}}/api/depositos
+Content-Type: application/json
+
+{
+  "nombre": "Depósito Test",
+  "direccion": "Av. Test 456",
+  "latitud": -34.6037,
+  "longitud": -58.3816,
+  "costoEstadiaDiario": 50.00
+}
+
+###############################################
+# PASO 1: CREAR SOLICITUD
+###############################################
+
+### 1.1. Crear solicitud completa
+POST {{baseUrlSolicitudes}}/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 1000,
+  "volumenContenedor": 10,
+  "nombreCliente": "Ana",
+  "apellidoCliente": "Martínez",
+  "dniCliente": "99887766",
+  "telefonoCliente": "0998877665",
+  "mailCliente": "ana@test.com",
+  "direccionCliente": "Calle Test 789",
+  "estadoInicial": "borrador"
+}
+
+### 1.2. Ver solicitud creada (cambiar ID según respuesta anterior)
+GET {{baseUrlSolicitudes}}/api/solicitudes/1
+
+###############################################
+# PASO 2: CREAR RUTA Y TRAMOS
+###############################################
+
+### 2.1. Crear ruta
+POST {{baseUrlRutas}}/api/rutas
+Content-Type: application/json
+
+{
+  "cantidadTramos": 2,
+  "cantidadDepositos": 1,
+  "distanciaTotal": 300,
+  "tiempoEstimadoMin": 360.0,
+  "costoTotal": 2000.0
+}
+
+### 2.2. Crear Tramo 1: Origen → Depósito
+POST {{baseUrlRutas}}/api/tramos
+Content-Type: application/json
+
+{
+  "latitudOrigen": -34.6037,
+  "longitudOrigen": -58.3816,
+  "latitudDestino": -34.7037,
+  "longitudDestino": -58.4816,
+  "distanciaKm": 150.0,
+  "costoAproximado": 900.00,
+  "ruta": {
+    "idRuta": 1
+  },
+  "depositoDestino": {
+    "idDeposito": 1
+  }
+}
+
+### 2.3. Crear Tramo 2: Depósito → Destino
+POST {{baseUrlRutas}}/api/tramos
+Content-Type: application/json
+
+{
+  "latitudOrigen": -34.7037,
+  "longitudOrigen": -58.4816,
+  "latitudDestino": -34.8037,
+  "longitudDestino": -58.5816,
+  "distanciaKm": 150.0,
+  "costoAproximado": 900.00,
+  "ruta": {
+    "idRuta": 1
+  },
+  "depositoOrigen": {
+    "idDeposito": 1
+  }
+}
+
+### 2.4. Ver todos los tramos de la ruta
+GET {{baseUrlRutas}}/api/rutas/1/tramos
+
+###############################################
+# PASO 3: ASIGNAR RUTA A SOLICITUD
+###############################################
+
+### 3.1. Asignar ruta a solicitud
+PUT {{baseUrlSolicitudes}}/api/solicitudes/1/asignar-ruta
+Content-Type: application/json
+
+{
+  "idRuta": 1,
+  "costoEstimado": 1800.00,
+  "tiempoEstimado": 360
+}
+
+### 3.2. Verificar solicitud con ruta asignada
+GET {{baseUrlSolicitudes}}/api/solicitudes/1
+
+###############################################
+# PASO 4: ASIGNAR CAMIONES A TRAMOS
+###############################################
+
+### 4.1. Asignar camión al Tramo 1
+PUT {{baseUrlRutas}}/api/tramos/1/asignar-camion/1
+
+### 4.2. Asignar camión al Tramo 2
+PUT {{baseUrlRutas}}/api/tramos/2/asignar-camion/1
+
+### 4.3. Verificar estado del Tramo 1
+GET {{baseUrlRutas}}/api/tramos/1
+
+### 4.4. Verificar disponibilidad del camión (debe ser true)
+GET {{baseUrlTransporte}}/api/camiones/1
+
+###############################################
+# PASO 5: ✨ INICIAR TRAMO 1 (NUEVO)
+###############################################
+
+### 5.1. Iniciar Tramo 1 (fecha automática)
+POST {{baseUrlRutas}}/api/tramos/1/iniciar
+Content-Type: application/json
+
+{}
+
+### 5.2. Iniciar Tramo 1 con fecha específica
+POST {{baseUrlRutas}}/api/tramos/1/iniciar
+Content-Type: application/json
+
+{
+  "fechaHoraInicio": "2025-01-10T08:00:00",
+  "observaciones": "Inicio del primer tramo de prueba"
+}
+
+### 5.3. Verificar que el tramo está iniciado
+GET {{baseUrlRutas}}/api/tramos/1
+
+### 5.4. Verificar que el camión está ocupado (disponibilidad = false)
+GET {{baseUrlTransporte}}/api/camiones/1
+
+###############################################
+# PASO 6: ✨ FINALIZAR TRAMO 1 (NUEVO)
+###############################################
+
+### 6.1. Finalizar Tramo 1 (fecha automática)
+POST {{baseUrlRutas}}/api/tramos/1/finalizar
+Content-Type: application/json
+
+{}
+
+### 6.2. Finalizar Tramo 1 con fecha específica (2 días después)
+POST {{baseUrlRutas}}/api/tramos/1/finalizar
+Content-Type: application/json
+
+{
+  "fechaHoraFin": "2025-01-12T14:00:00",
+  "observaciones": "Llegada al depósito después de 2 días"
+}
+
+### 6.3. Verificar que el tramo está finalizado con costo real
+GET {{baseUrlRutas}}/api/tramos/1
+
+### 6.4. Verificar que el camión está disponible nuevamente
+GET {{baseUrlTransporte}}/api/camiones/1
+
+###############################################
+# PASO 7: ✨ VER DETALLE DEL COSTO REAL (NUEVO)
+###############################################
+
+### 7.1. Ver desglose completo del cálculo de costo real del Tramo 1
+GET {{baseUrlRutas}}/api/tramos/1/costo-real
+
+###############################################
+# PASO 8: COMPLETAR TRAMO 2
+###############################################
+
+### 8.1. Iniciar Tramo 2
+POST {{baseUrlRutas}}/api/tramos/2/iniciar
+Content-Type: application/json
+
+{
+  "fechaHoraInicio": "2025-01-12T15:00:00",
+  "observaciones": "Salida del depósito"
+}
+
+### 8.2. Finalizar Tramo 2
+POST {{baseUrlRutas}}/api/tramos/2/finalizar
+Content-Type: application/json
+
+{
+  "fechaHoraFin": "2025-01-13T18:00:00",
+  "observaciones": "Entrega final"
+}
+
+### 8.3. Ver detalle del costo real del Tramo 2
+GET {{baseUrlRutas}}/api/tramos/2/costo-real
+
+### 8.4. Verificar todos los tramos de la ruta (deben estar finalizados)
+GET {{baseUrlRutas}}/api/rutas/1/tramos
+
+###############################################
+# PASO 9: ✨ FINALIZAR SOLICITUD CON COSTO FINAL (NUEVO)
+###############################################
+
+### 9.1. Finalizar solicitud (calcula costo final sumando todos los tramos)
+POST {{baseUrlSolicitudes}}/api/solicitudes/1/finalizar
+
+### 9.2. Verificar solicitud finalizada
+GET {{baseUrlSolicitudes}}/api/solicitudes/1
+
+###############################################
+# PASO 10: ✨ VER RESUMEN COMPARATIVO (NUEVO)
+###############################################
+
+### 10.1. Ver resumen de costos estimados vs reales
+GET {{baseUrlSolicitudes}}/api/solicitudes/1/resumen-costos
+
+###############################################
+# VERIFICACIONES FINALES
+###############################################
+
+### Ver todas las solicitudes
+GET {{baseUrlSolicitudes}}/api/solicitudes
+
+### Ver todos los tramos
+GET {{baseUrlRutas}}/api/tramos
+
+### Ver todos los camiones (verificar disponibilidad)
+GET {{baseUrlTransporte}}/api/camiones
+
+### Ver todas las tarifas
+GET {{baseUrlTarifas}}/api/tarifas
+
+###############################################
+# CASOS DE ERROR (PRUEBAS NEGATIVAS)
+###############################################
+
+### Error: Iniciar tramo sin camión asignado
+POST {{baseUrlRutas}}/api/tramos/999/iniciar
+Content-Type: application/json
+
+{}
+
+### Error: Finalizar solicitud con tramos pendientes
+POST {{baseUrlSolicitudes}}/api/solicitudes/999/finalizar
+
+### Error: Tramo no encontrado
+GET {{baseUrlRutas}}/api/tramos/999/costo-real
+
+###############################################
+# ACTUALIZACIÓN MANUAL DE DISPONIBILIDAD (OPCIONAL)
+###############################################
+
+### Marcar camión como ocupado manualmente
+PATCH {{baseUrlTransporte}}/api/camiones/1/disponibilidad?disponible=false
+
+### Marcar camión como disponible manualmente
+PATCH {{baseUrlTransporte}}/api/camiones/1/disponibilidad?disponible=true
+# 🧪 GUÍA DE PRUEBAS PASO A PASO - TARIFAS Y COSTOS REALES
+
+## 📋 PRE-REQUISITOS
+
+Antes de comenzar las pruebas, asegúrate de:
+
+1. ✅ Todos los microservicios estén corriendo:
+   - ms-Tarifas (puerto 8092)
+   - ms-Transporte (puerto 8093)
+   - ms-Rutas (puerto 8091)
+   - ms-Solicitudes (puerto 8090)
+
+2. ✅ Tener datos de prueba en la base de datos:
+   - Al menos 1 cliente
+   - Al menos 1 camión con costos configurados
+   - Al menos 1 depósito con costo de estadía
+   - Al menos 1 ciudad
+
+3. ✅ (Opcional) Configurar Keycloak y obtener token si la seguridad está activa
+
+---
+
+## 🎬 ESCENARIO DE PRUEBA COMPLETO
+
+Vamos a simular un transporte completo desde la creación hasta la finalización:
+
+### **Flujo de Prueba:**
+1. Verificar tarifas configuradas
+2. Crear una solicitud
+3. Crear una ruta con tramos
+4. Asignar la ruta a la solicitud
+5. Asignar camiones a los tramos
+6. ✨ **Iniciar tramo** (NUEVO)
+7. ✨ **Finalizar tramo con cálculo de costo real** (NUEVO)
+8. ✨ **Finalizar solicitud con costo final** (NUEVO)
+9. ✨ **Ver resumen comparativo** (NUEVO)
+
+---
+
+## 📝 PASO 0: Preparación - Verificar Datos Base
+
+### 0.1. Verificar que las tarifas estén inicializadas
+
+```bash
+# GET - Ver todas las tarifas
+curl -X GET http://localhost:8092/api/tarifas
+```
+
+**Respuesta esperada:**
+```json
+[
+  {
+    "id": 1,
+    "tipo": "COSTO_KM_BASE",
+    "descripcion": "Costo base por kilómetro",
+    "valor": 5.00,
+    "unidad": "km",
+    "activo": true
+  },
+  {
+    "id": 2,
+    "tipo": "COMBUSTIBLE",
+    "descripcion": "Precio del combustible por litro",
+    "valor": 1.50,
+    "unidad": "litro",
+    "activo": true
+  },
+  {
+    "id": 3,
+    "tipo": "ESTADIA_DEPOSITO",
+    "descripcion": "Costo de estadía en depósito por día",
+    "valor": 50.00,
+    "unidad": "dia",
+    "activo": true
+  },
+  {
+    "id": 4,
+    "tipo": "CARGO_GESTION_TRAMO",
+    "descripcion": "Cargo de gestión por tramo",
+    "valor": 100.00,
+    "unidad": "tramo",
+    "activo": true
+  }
+]
+```
+
+**❌ Si no hay tarifas, inicializarlas:**
+```bash
+curl -X POST http://localhost:8092/api/tarifas/inicializar
+```
+
+### 0.2. Verificar que existe un camión con costos
+
+```bash
+# GET - Ver todos los camiones
+curl -X GET http://localhost:8093/api/camiones
+```
+
+**Verificar que el camión tenga:**
+- ✅ `costoBaseKm`: mayor a 0 (ej: 7.50)
+- ✅ `consumoCombustibleKm`: mayor a 0 (ej: 0.35)
+- ✅ `disponibilidad`: true
+
+**❌ Si no hay camiones o no tienen costos, crear uno:**
+```bash
+curl -X POST http://localhost:8093/api/camiones \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patente": "ABC123",
+    "telefono": "1234567890",
+    "capacidadPeso": 5000,
+    "capacidadVolumen": 30,
+    "disponibilidad": true,
+    "costoBaseKm": 7.50,
+    "consumoCombustibleKm": 0.35,
+    "transportista": {
+      "nombre": "Juan",
+      "apellido": "Perez",
+      "dni": "12345678",
+      "telefono": "1234567890"
+    }
+  }'
+```
+
+### 0.3. Verificar que existe un depósito con costo de estadía
+
+```bash
+# GET - Ver todos los depósitos
+curl -X GET http://localhost:8091/api/depositos
+```
+
+**Verificar que tenga:**
+- ✅ `costoEstadiaDiario`: mayor a 0 (ej: 50.00)
+
+**❌ Si no hay depósitos o no tienen costo, crear uno:**
+```bash
+curl -X POST http://localhost:8091/api/depositos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Depósito Central",
+    "direccion": "Av. Principal 123",
+    "latitud": -34.6037,
+    "longitud": -58.3816,
+    "costoEstadiaDiario": 50.00
+  }'
+```
+
+---
+
+## 🚀 PASO 1: Crear una Solicitud
+
+```bash
+curl -X POST http://localhost:8090/api/solicitudes/completa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pesoContenedor": 1000,
+    "volumenContenedor": 10,
+    "nombreCliente": "María",
+    "apellidoCliente": "García",
+    "dniCliente": "87654321",
+    "telefonoCliente": "0987654321",
+    "mailCliente": "maria@email.com",
+    "direccionCliente": "Calle Falsa 123",
+    "estadoInicial": "borrador"
+  }'
+```
+
+**Respuesta esperada:**
+```json
+{
+  "numeroSolicitud": 1,
+  "contenedor": {
+    "idContenedor": 1,
+    "peso": 1000,
+    "volumen": 10
+  },
+  "cliente": {
+    "idCliente": 1,
+    "nombre": "María",
+    "apellido": "García",
+    "dni": "87654321"
+  },
+  "estadoSolicitud": {
+    "idEstado": 1,
+    "nombre": "borrador"
+  },
+  "costoEstimado": null,
+  "costoFinal": null
+}
+```
+
+**✅ Anotar el `numeroSolicitud`** (usaremos ID = 1 en los ejemplos)
+
+---
+
+## 🛣️ PASO 2: Crear una Ruta con Tramos
+
+### 2.1. Crear la ruta
+
+```bash
+curl -X POST http://localhost:8091/api/rutas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cantidadTramos": 2,
+    "cantidadDepositos": 1,
+    "distanciaTotal": 300,
+    "tiempoEstimadoMin": 360.0,
+    "costoTotal": 2000.0
+  }'
+```
+
+**✅ Anotar el `idRuta`** (usaremos ID = 1)
+
+### 2.2. Crear Tramo 1: Origen → Depósito
+
+```bash
+curl -X POST http://localhost:8091/api/tramos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "latitudOrigen": -34.6037,
+    "longitudOrigen": -58.3816,
+    "latitudDestino": -34.7037,
+    "longitudDestino": -58.4816,
+    "distanciaKm": 150.0,
+    "costoAproximado": 900.00,
+    "ruta": {
+      "idRuta": 1
+    },
+    "depositoDestino": {
+      "idDeposito": 1
+    },
+    "tipoTramo": {
+      "idTipoTramo": 1
+    },
+    "estado": {
+      "idEstado": 1
+    }
+  }'
+```
+
+**✅ Anotar el `idTramo`** del primer tramo (usaremos ID = 1)
+
+### 2.3. Crear Tramo 2: Depósito → Destino
+
+```bash
+curl -X POST http://localhost:8091/api/tramos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "latitudOrigen": -34.7037,
+    "longitudOrigen": -58.4816,
+    "latitudDestino": -34.8037,
+    "longitudDestino": -58.5816,
+    "distanciaKm": 150.0,
+    "costoAproximado": 900.00,
+    "ruta": {
+      "idRuta": 1
+    },
+    "depositoOrigen": {
+      "idDeposito": 1
+    },
+    "tipoTramo": {
+      "idTipoTramo": 2
+    },
+    "estado": {
+      "idEstado": 1
+    }
+  }'
+```
+
+**✅ Anotar el `idTramo`** del segundo tramo (usaremos ID = 2)
+
+---
+
+## 📌 PASO 3: Asignar Ruta a la Solicitud
+
+```bash
+curl -X PUT http://localhost:8090/api/solicitudes/1/asignar-ruta \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idRuta": 1,
+    "costoEstimado": 1800.00,
+    "tiempoEstimado": 360
+  }'
+```
+
+**Respuesta esperada:**
+```json
+{
+  "numeroSolicitud": 1,
+  "idRuta": 1,
+  "costoEstimado": 1800.00,
+  "tiempoEstimado": 360,
+  "estadoSolicitud": {
+    "nombre": "programada"
+  }
+}
+```
+
+**✅ Verificar que el estado cambió a "programada"**
+
+---
+
+## 🚚 PASO 4: Asignar Camiones a los Tramos
+
+### 4.1. Asignar camión al Tramo 1
+
+```bash
+curl -X PUT http://localhost:8091/api/tramos/1/asignar-camion/1
+```
+
+**Respuesta esperada:**
+```json
+{
+  "idTramo": 1,
+  "idCamion": 1,
+  "estado": {
+    "nombre": "asignado"
+  }
+}
+```
+
+### 4.2. Asignar camión al Tramo 2
+
+```bash
+curl -X PUT http://localhost:8091/api/tramos/2/asignar-camion/1
+```
+
+**✅ Verificar que ambos tramos tienen estado "asignado"**
+
+---
+
+## ✨ PASO 5: INICIAR TRAMO 1 (NUEVO)
+
+**Este es uno de los endpoints nuevos implementados**
+
+```bash
+curl -X POST http://localhost:8091/api/tramos/1/iniciar \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**O con fecha específica:**
+```bash
+curl -X POST http://localhost:8091/api/tramos/1/iniciar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fechaHoraInicio": "2025-01-10T08:00:00",
+    "observaciones": "Inicio del primer tramo"
+  }'
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "message": "Tramo iniciado exitosamente",
+  "tramo": {
+    "idTramo": 1,
+    "fechaHoraInicio": "2025-01-10T08:00:00",
+    "idCamion": 1
+  },
+  "fechaHoraInicio": "2025-01-10T08:00:00",
+  "estado": "iniciado"
+}
+```
+
+**✅ Verificaciones:**
+- Estado del tramo cambió a **"iniciado"**
+- Se registró la **fechaHoraInicio**
+- El camión ahora está **NO disponible**
+
+**Verificar disponibilidad del camión:**
+```bash
+curl -X GET http://localhost:8093/api/camiones/1
+```
+
+Debe mostrar: `"disponibilidad": false`
+
+**📊 Revisar logs del servidor:**
+```
+🚚 Iniciando tramo ID: 1
+✅ Tramo iniciado exitosamente a las 2025-01-10T08:00:00
+✅ Camión ID 1 marcado como NO disponible
+```
+
+---
+
+## ✨ PASO 6: FINALIZAR TRAMO 1 (NUEVO)
+
+**Este endpoint calcula el COSTO REAL automáticamente**
+
+### Simular que pasaron 2 días (para calcular estadía en depósito)
+
+```bash
+curl -X POST http://localhost:8091/api/tramos/1/finalizar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fechaHoraFin": "2025-01-12T14:00:00",
+    "observaciones": "Llegada al depósito"
+  }'
+```
+
+**Respuesta esperada:**
+```json
+{
+  "success": true,
+  "message": "Tramo finalizado exitosamente",
+  "tramo": {
+    "idTramo": 1,
+    "fechaHoraInicio": "2025-01-10T08:00:00",
+    "fechaHoraFin": "2025-01-12T14:00:00",
+    "costoReal": 1303.75,
+    "distanciaKm": 150.0
+  },
+  "fechaHoraInicio": "2025-01-10T08:00:00",
+  "fechaHoraFin": "2025-01-12T14:00:00",
+  "costoReal": 1303.75,
+  "estado": "finalizado"
+}
+```
+
+**✅ Verificaciones:**
+- Estado del tramo cambió a **"finalizado"**
+- Se registró la **fechaHoraFin**
+- Se calculó el **costoReal** ($1303.75)
+- El camión ahora está **disponible** nuevamente
+
+**📊 Revisar logs del servidor:**
+```
+🏁 Finalizando tramo ID: 1
+💰 Calculando costo real del tramo ID: 1
+✅ Tramo finalizado. Costo real: $1303.75
+📊 Detalle: Kilometraje: $7.50/km × 150.00 km = $1125.00 |
+            Combustible: 0.35 L/km × 150.00 km × $1.50/L = $78.75 |
+            Estadía en Depósito Central: 2 días × $50.00/día = $100.00 |
+            Gestión: $100.00
+✅ Camión ID 1 liberado (disponible)
+```
+
+---
+
+## ✨ PASO 7: Ver Detalle del Cálculo de Costo Real (NUEVO)
+
+**Endpoint para ver el desglose completo del cálculo**
+
+```bash
+curl -X GET http://localhost:8091/api/tramos/1/costo-real
+```
+
+**Respuesta esperada:**
+```json
+{
+  "idTramo": 1,
+  "distanciaKm": 150.00,
+  "costoBaseKmCamion": 7.50,
+  "costoKilometraje": 1125.00,
+  "consumoCombustibleKm": 0.35,
+  "precioCombustible": 1.50,
+  "costoCombustible": 78.75,
+  "diasEstadia": 2,
+  "costoEstadiaDiario": 50.00,
+  "costoEstadia": 100.00,
+  "cargoGestion": 100.00,
+  "costoTotal": 1403.75,
+  "detalleCalculo": "Kilometraje: $7.50/km × 150.00 km = $1125.00 | Combustible: 0.35 L/km × 150.00 km × $1.50/L = $78.75 | Estadía en Depósito Central: 2 días × $50.00/día = $100.00 | Gestión: $100.00"
+}
+```
+
+**✅ Este endpoint muestra TODO el desglose del costo:**
+- Costo de kilometraje
+- Costo de combustible
+- Costo de estadía (si aplica)
+- Cargo de gestión
+- Total con fórmula detallada
+
+---
+
+## 🔁 PASO 8: Repetir para el Tramo 2
+
+### 8.1. Iniciar Tramo 2
+
+```bash
+curl -X POST http://localhost:8091/api/tramos/2/iniciar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fechaHoraInicio": "2025-01-12T15:00:00"
+  }'
+```
+
+### 8.2. Finalizar Tramo 2
+
+```bash
+curl -X POST http://localhost:8091/api/tramos/2/finalizar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fechaHoraFin": "2025-01-13T18:00:00"
+  }'
+```
+
+**✅ Ambos tramos deben estar en estado "finalizado"**
+
+---
+
+## ✨ PASO 9: FINALIZAR SOLICITUD CON COSTO FINAL (NUEVO)
+
+**Este endpoint suma todos los costos reales y calcula el costo final**
+
+```bash
+curl -X POST http://localhost:8090/api/solicitudes/1/finalizar
+```
+
+**Respuesta esperada:**
+```json
+{
+  "numeroSolicitud": 1,
+  "costoEstimado": 1800.00,
+  "costoFinal": 2607.50,
+  "tiempoEstimado": 360,
+  "tiempoReal": 130,
+  "estadoSolicitud": {
+    "nombre": "entregada"
+  }
+}
+```
+
+**✅ Verificaciones:**
+- Estado cambió a **"entregada"**
+- Se calculó el **costoFinal** (suma de costos reales de ambos tramos)
+- Se calculó el **tiempoReal** (en horas)
+- Hay diferencia entre costo estimado y real
+
+**📊 Revisar logs del servidor:**
+```
+🏁 Finalizando solicitud ID: 1
+✅ Solicitud finalizada. Costo final: $2607.50, Tiempo real: 130 horas
+📊 Diferencia con estimado: $807.50 (Estimado: $1800.00, Real: $2607.50)
+```
+
+---
+
+## ✨ PASO 10: Ver Resumen Comparativo (NUEVO)
+
+**Endpoint para ver la comparación detallada entre estimado vs real**
+
+```bash
+curl -X GET http://localhost:8090/api/solicitudes/1/resumen-costos
+```
+
+**Respuesta esperada:**
+```json
+{
+  "idSolicitud": 1,
+  "costoEstimado": 1800.00,
+  "costoFinal": 2607.50,
+  "tiempoEstimado": 360,
+  "tiempoReal": 130,
+  "estado": "entregada",
+  "diferenciaCosto": 807.50,
+  "porcentajeDiferencia": 44.86,
+  "diferenciaTiempo": -230
+}
+```
+
+**✅ Este endpoint muestra:**
+- Costos estimados vs reales
+- Tiempo estimado vs real
+- Diferencia en $ y en %
+- Diferencia en tiempo (horas)
+
+**📊 Interpretación:**
+- El costo real fue **44.86% mayor** al estimado
+- El tiempo real fue **230 horas menos** (más rápido de lo estimado)
+
+---
+
+## 📋 RESUMEN DE ENDPOINTS NUEVOS PROBADOS
+
+| Endpoint | Método | Funcionalidad | Estado |
+|----------|--------|---------------|--------|
+| `/api/tramos/{id}/iniciar` | POST | Iniciar tramo y ocupar camión | ✅ |
+| `/api/tramos/{id}/finalizar` | POST | Finalizar tramo y calcular costo real | ✅ |
+| `/api/tramos/{id}/costo-real` | GET | Ver desglose del cálculo de costo | ✅ |
+| `/api/solicitudes/{id}/finalizar` | POST | Finalizar solicitud con costo final | ✅ |
+| `/api/solicitudes/{id}/resumen-costos` | GET | Ver comparativa estimado vs real | ✅ |
+| `/api/camiones/{id}/disponibilidad` | PATCH | Actualizar disponibilidad de camión | ✅ (automático) |
+
+---
+
+## 🎯 CASOS DE PRUEBA ADICIONALES
+
+### Caso 1: Error al iniciar tramo sin camión asignado
+
+```bash
+# Intentar iniciar un tramo sin camión
+curl -X POST http://localhost:8091/api/tramos/99/iniciar \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Error esperado:** `"El tramo no tiene un camión asignado"`
+
+### Caso 2: Error al finalizar solicitud con tramos pendientes
+
+```bash
+# Crear nueva solicitud, asignar ruta pero NO finalizar tramos
+curl -X POST http://localhost:8090/api/solicitudes/2/finalizar
+```
+
+**Error esperado:** `"No todos los tramos de la ruta están finalizados"`
+
+### Caso 3: Tramo sin depósito (estadía = $0)
+
+Si un tramo NO tiene `depositoDestino`, el costo de estadía es $0:
+- Solo se cobra: kilometraje + combustible + gestión
+
+---
+
+## 🔍 VERIFICACIONES FINALES
+
+### 1. Verificar que el camión quedó disponible
+
+```bash
+curl -X GET http://localhost:8093/api/camiones/1
+```
+
+Debe mostrar: `"disponibilidad": true`
+
+### 2. Verificar todos los tramos de la ruta
+
+```bash
+curl -X GET http://localhost:8091/api/rutas/1/tramos
+```
+
+Todos deben tener:
+- `estado`: "finalizado"
+- `costoReal`: mayor a 0
+- `fechaHoraInicio` y `fechaHoraFin` registradas
+
+### 3. Verificar estado de la solicitud
+
+```bash
+curl -X GET http://localhost:8090/api/solicitudes/1
+```
+
+Debe tener:
+- `estado`: "entregada"
+- `costoFinal`: valor calculado
+- `tiempoReal`: valor en horas
+
+---
+
+## 📊 TABLA DE VERIFICACIÓN
+
+| Paso | Descripción | Estado | Notas |
+|------|-------------|--------|-------|
+| 0 | Verificar tarifas inicializadas | ⬜ | 4 tarifas deben existir |
+| 1 | Crear solicitud | ⬜ | Estado: "borrador" |
+| 2 | Crear ruta con 2 tramos | ⬜ | Anotar IDs |
+| 3 | Asignar ruta a solicitud | ⬜ | Estado: "programada" |
+| 4 | Asignar camiones a tramos | ⬜ | Estado tramo: "asignado" |
+| 5 | ✨ Iniciar tramo 1 | ⬜ | Camión ocupado |
+| 6 | ✨ Finalizar tramo 1 | ⬜ | Costo real calculado |
+| 7 | ✨ Ver detalle costo tramo 1 | ⬜ | Desglose completo |
+| 8 | ✨ Iniciar/Finalizar tramo 2 | ⬜ | Repetir proceso |
+| 9 | ✨ Finalizar solicitud | ⬜ | Costo final = suma tramos |
+| 10 | ✨ Ver resumen comparativo | ⬜ | Diferencias % |
+
+---
+
+## 🛠️ TROUBLESHOOTING
+
+### Error: "Tarifa no encontrada"
+**Solución:** Ejecutar `POST /api/tarifas/inicializar`
+
+### Error: "Camión no encontrado"
+**Solución:** Crear un camión con `costoBaseKm` y `consumoCombustibleKm`
+
+### Error: "package org.springframework.security.access.prepost does not exist"
+**Solución:** Agregar Spring Security al pom.xml y recargar Maven
+
+### Error: "El tramo debe estar en estado 'asignado'"
+**Solución:** Asignar un camión al tramo antes de iniciarlo
+
+### El costo real es $0
+**Solución:** Verificar que el camión tenga `costoBaseKm` y `consumoCombustibleKm` configurados
+
+---
+
+## 📝 NOTAS IMPORTANTES
+
+1. **Los timestamps son importantes:** Si usas fechas automáticas (sin enviar fechaHoraInicio/Fin), el sistema usa `LocalDateTime.now()`, lo que puede resultar en 0 días de estadía
+
+2. **El cálculo de estadía usa días completos:** Si el tramo inicia y termina el mismo día, cuenta como 1 día mínimo
+
+3. **Los logs son tus amigos:** Todos los cálculos se registran en los logs del servidor con el símbolo 📊
+
+4. **Seguridad:** Si Keycloak está activo, necesitarás agregar el header:
+   ```bash
+   -H "Authorization: Bearer YOUR_TOKEN_HERE"
+   ```
+
+---
+
+**Fecha de creación:** 2025-01-12
+**Última actualización:** 2025-01-12
+**Estado:** ✅ COMPLETO Y LISTO PARA USAR
+

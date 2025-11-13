@@ -24,7 +24,7 @@ public class Camion {
     private double consumoCombustibleKm; // Litros por km
 
     // Relación con Transportista (N camiones → 1 transportista)
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)  // ✅ Cambio a ALL para SQLite
     @JoinColumn(name = "id_transportista")
     private Transportista transportista;
 }

@@ -1,6 +1,7 @@
 package com.microservicio.solicitudes.clients;
 
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
+import com.microservicio.solicitudes.dtos.TramoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -84,6 +85,30 @@ public class RutasApiClient {
         } catch (RestClientException e) {
             log.error("❌ Error al consultar rutas tentativas: {}", e.getMessage());
             throw new RuntimeException("No se pudo obtener las rutas tentativas desde ms-rutas", e);
+        }
+    }
+
+    /**
+     * Obtiene todos los tramos de una ruta específica para calcular costos finales
+     */
+    public List<TramoDTO> obtenerTramosPorRuta(Long idRuta) {
+        try {
+            log.info("🔍 Consultando tramos de ruta {} en ms-rutas", idRuta);
+
+            List<TramoDTO> tramos = rutasRestClient.get()
+                    .uri("/{idRuta}/tramos", idRuta)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<TramoDTO>>() {});
+
+            if (tramos != null) {
+                log.info("✅ {} tramos obtenidos para ruta {}", tramos.size(), idRuta);
+            }
+
+            return tramos;
+
+        } catch (RestClientException e) {
+            log.error("❌ Error al consultar tramos de ruta {}: {}", idRuta, e.getMessage());
+            return null;
         }
     }
 

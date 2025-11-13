@@ -187,6 +187,7 @@ public class TarifaService {
             crearTarifaDefecto("COSTO_KM_BASE", "Costo base por kilómetro", new BigDecimal("5.00"), "km");
             crearTarifaDefecto("COMBUSTIBLE", "Precio del combustible por litro", new BigDecimal("1.50"), "litro");
             crearTarifaDefecto("ESTADIA_DEPOSITO", "Costo de estadía en depósito por día", new BigDecimal("50.00"), "dia");
+            crearTarifaDefecto("CARGO_GESTION_TRAMO", "Cargo de gestión por tramo", new BigDecimal("100.00"), "tramo");
             log.info("Tarifas por defecto creadas exitosamente");
         }
     }
@@ -202,4 +203,3 @@ public class TarifaService {
         tarifaRepository.save(tarifa);
     }
 }
-
