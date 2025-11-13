@@ -6,6 +6,7 @@ import com.microservicio.rutas.services.TramoService;
 import lombok.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class TramoController {
         return ResponseEntity.ok(service.obtenerTodos());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<Tramo> obtenerPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id)
@@ -30,12 +32,14 @@ public class TramoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Tramo> crear(@RequestBody Tramo tramo) {
         Tramo nuevo = service.crear(tramo);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
@@ -46,6 +50,7 @@ public class TramoController {
      * Asigna un camión a un tramo de traslado de contenedor.
      * PUT /api/tramos/{idTramo}/asignar-camion/{idCamion}
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{idTramo}/asignar-camion/{idCamion}")
     public ResponseEntity<Tramo> asignarCamion(
             @PathVariable("idTramo") Long idTramo,

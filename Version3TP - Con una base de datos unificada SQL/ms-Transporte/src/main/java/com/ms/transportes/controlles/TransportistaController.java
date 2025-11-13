@@ -3,6 +3,7 @@ package com.ms.transportes.controlles;
 
 import com.ms.transportes.models.Transportista;
 import com.ms.transportes.services.TransportistaService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -10,12 +11,12 @@ import java.util.List;
 @RequestMapping("/api/transportistas")
 @CrossOrigin(origins = "*")
 public class TransportistaController {
-
     private final TransportistaService service;
 
     public TransportistaController(TransportistaService service) {
         this.service = service;
     }
+
 
     @GetMapping
     public List<Transportista> listar() {
@@ -42,4 +43,5 @@ public class TransportistaController {
     public void eliminar(@PathVariable Long id) {
         service.eliminar(id);
     }
+
 }

@@ -10,6 +10,7 @@ import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
 import com.microservicio.solicitudes.models.Solicitud;
 import com.microservicio.solicitudes.services.SolicitudService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,30 +28,35 @@ public class SolicitudController {
         this.rutasApiClient = rutasApiClient;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<Solicitud>> listar() {
         return ResponseEntity.ok(service.obtenerTodas());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     @GetMapping("/{id}")
     public ResponseEntity<Solicitud> obtener(@PathVariable("id") Long id) {
         Solicitud s = service.obtenerPorId(id);
         return (s != null) ? ResponseEntity.ok(s) : ResponseEntity.notFound().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Solicitud> crear(@RequestBody Solicitud solicitud) {
         return ResponseEntity.status(201).body(service.crear(solicitud));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
-
     //"Obtener solicitud con su ruta completa desde ms-rutas"
     // localhost:8090/api/solicitudes/1/rutas
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{idSolicitud}/rutas")
     public ResponseEntity<RutaResumenDTO> obtenerConRuta(@PathVariable Long idSolicitud) {
         Solicitud solicitud = service.obtenerPorId(idSolicitud);
@@ -81,6 +87,7 @@ public class SolicitudController {
      * 2. El registro del cliente si no existe previamente
      * 3. Las solicitudes registran un estado: borrador, programada, en tránsito, entregada
      */
+    @PreAuthorize("hasRole('CLIENTE')")
     @PostMapping("/completa")
     public ResponseEntity<Solicitud> crearSolicitudCompleta(@RequestBody SolicitudRequestDTO dto) {
         try {
@@ -97,6 +104,7 @@ public class SolicitudController {
      *
      * GET /api/solicitudes/contenedor/{idContenedor}/estado
      */
+    @PreAuthorize("hasRole('CLIENTE')")
     @GetMapping("/contenedor/{idContenedor}/estado")
     public ResponseEntity<?> obtenerEstadoContenedor(@PathVariable("idContenedor") Long idContenedor) {
         try {
@@ -125,6 +133,7 @@ public class SolicitudController {
      * Asignar una ruta con todos sus tramos a la solicitud (Operador/Administrador)
      * PUT /api/solicitudes/{idSolicitud}/asignar-ruta
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{idSolicitud}/asignar-ruta")
     public ResponseEntity<?> asignarRuta(
             @PathVariable("idSolicitud") Long idSolicitud,
@@ -143,6 +152,7 @@ public class SolicitudController {
      * Desasignar una ruta de una solicitud
      * DELETE /api/solicitudes/{idSolicitud}/desasignar-ruta
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{idSolicitud}/desasignar-ruta")
     public ResponseEntity<?> desasignarRuta(@PathVariable("idSolicitud") Long idSolicitud) {
         try {
@@ -174,6 +184,7 @@ public class SolicitudController {
      * - GET /api/solicitudes/contenedores-pendientes?clienteDni=12345678
      * - GET /api/solicitudes/contenedores-pendientes?estado=programada&idRuta=5
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/contenedores-pendientes")
     public ResponseEntity<List<ContenedorPendienteDTO>> obtenerContenedoresPendientes() {
         try {

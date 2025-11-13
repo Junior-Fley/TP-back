@@ -7,6 +7,7 @@ import com.microservicio.rutas.models.Rutas;
 import com.microservicio.rutas.services.RutasService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -55,8 +56,10 @@ public class RutasController {
         return ResponseEntity.ok(resumen);
     }
 
+
     // 🔹 Requerimiento Funcional #3: Consultar rutas tentativas con todos los tramos
     // sugeridos y el tiempo y costo estimados (Operador / Administrador)
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/tentativas")
     public ResponseEntity<List<RutaTentativaDTO>> obtenerRutasTentativas() {
         List<RutaTentativaDTO> rutasTentativas = service.obtenerRutasTentativas();
@@ -64,6 +67,7 @@ public class RutasController {
     }
 
     // 🔹 Obtener una ruta tentativa específica por ID con todos sus tramos
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/tentativa")
     public ResponseEntity<RutaTentativaDTO> obtenerRutaTentativaPorId(@PathVariable("id") Long id) {
         RutaTentativaDTO ruta = service.obtenerRutaTentativaPorId(id);

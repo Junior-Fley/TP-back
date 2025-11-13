@@ -2,6 +2,7 @@ package com.ms.transportes.controlles;
 
 import com.ms.transportes.models.Camion;
 import com.ms.transportes.services.CamionService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class CamionController {
         return service.obtenerTodos();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public Camion obtenerPorId(@PathVariable("id") Long id) {
         return service.obtenerPorId(id);

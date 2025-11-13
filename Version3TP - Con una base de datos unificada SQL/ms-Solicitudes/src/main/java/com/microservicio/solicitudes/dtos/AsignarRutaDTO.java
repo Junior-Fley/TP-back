@@ -18,4 +18,3 @@ public class AsignarRutaDTO {
     private BigDecimal costoEstimado;
     private Integer tiempoEstimado;
 }
-

@@ -8,6 +8,11 @@
 //import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
 //import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtGrantedAuthoritiesConverterAdapter;
 //import org.springframework.security.web.server.SecurityWebFilterChain;
+//import org.springframework.web.cors.CorsConfiguration;
+//import org.springframework.web.cors.reactive.CorsConfigurationSource;
+//import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+//
+//import java.util.Arrays;
 //
 ///**
 // * Configuración de Seguridad para el Gateway (Reactive)
@@ -20,24 +25,25 @@
 //    @Bean
 //    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 //        http
+//            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 //            .csrf(csrf -> csrf.disable())
 //            .authorizeExchange(exchanges -> exchanges
 //                // 🔓 Endpoints públicos (sin autenticación)
 //                .pathMatchers("/publico/**").permitAll()
 //                .pathMatchers("/actuator/**").permitAll()
 //
-//                // 🔐 Endpoints protegidos por rol
-//                // CLIENTE: puede registrar y consultar solicitudes
+//                // 🔐 CLIENTE: puede registrar y consultar solicitudes de transporte
 //                .pathMatchers("/api/solicitudes/**").hasRole("CLIENTE")
 //
-//                // ADMIN (OPERADOR): puede gestionar rutas, tarifas, depósitos, camiones
+//                // 🔐 ADMIN (OPERADOR/ADMINISTRADOR): puede gestionar todo
 //                .pathMatchers("/api/rutas/**").hasRole("ADMIN")
 //                .pathMatchers("/api/tarifas/**").hasRole("ADMIN")
 //                .pathMatchers("/api/depositos/**").hasRole("ADMIN")
 //                .pathMatchers("/api/camiones/**").hasRole("ADMIN")
 //                .pathMatchers("/api/ciudades/**").hasRole("ADMIN")
+//                .pathMatchers("/api/contenedores/**").hasRole("ADMIN")
 //
-//                // TRANSPORTISTA: puede ver y gestionar tramos asignados
+//                // 🔐 TRANSPORTISTA (CONDUCTOR/CHOFER): puede ver tramos asignados y registrar inicio/fin
 //                .pathMatchers("/api/tramos/**").hasRole("TRANSPORTISTA")
 //                .pathMatchers("/api/transportistas/**").hasRole("TRANSPORTISTA")
 //
@@ -49,6 +55,23 @@
 //            );
 //
 //        return http.build();
+//    }
+//
+//    /**
+//     * Configuración de CORS para permitir peticiones desde diferentes orígenes
+//     */
+//    @Bean
+//    public CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration configuration = new CorsConfiguration();
+//        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+//        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+//        configuration.setAllowedHeaders(Arrays.asList("*"));
+//        configuration.setAllowCredentials(true);
+//        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", configuration);
+//        return source;
 //    }
 //
 //    /**
@@ -73,4 +96,3 @@
 //        return jwtAuthenticationConverter;
 //    }
 //}
-//
