@@ -5,9 +5,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; ///////////////////////////////////
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity; //////////////////////////////////////
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,9 +29,10 @@ import java.util.stream.Collectors;
  * - ADMIN (Operador/Administrador): Gestiona clientes, contenedores, asigna rutas y camiones
  * - TRANSPORTISTA: No tiene acceso a este microservicio (usa ms-Rutas para sus tramos)
  */
+
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+//@EnableMethodSecurity(prePostEnabled = true)/// ////////////////////////////////
 public class SecurityConfig {
 
     @Bean
@@ -41,50 +42,52 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // 🔓 Endpoints públicos (Swagger, Actuator)
-                .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                            .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
+//                // 🔓 Endpoints públicos (Swagger, Actuator)
+//                .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+//
+//                // 📋 SOLICITUDES - CLIENTE puede crear y consultar sus solicitudes
+//                .requestMatchers(HttpMethod.POST, "/api/solicitudes").hasRole("CLIENTE")
+//                .requestMatchers(HttpMethod.POST, "/api/solicitudes/completa").hasRole("CLIENTE")
+//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedor/*/estado").hasRole("CLIENTE")
+//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*/rutas").hasAnyRole("CLIENTE", "ADMIN")
+//
+//                // 📋 SOLICITUDES - ADMIN puede ver todas las solicitudes y eliminar
+//                .requestMatchers(HttpMethod.GET, "/api/solicitudes").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*").hasAnyRole("CLIENTE", "ADMIN")
+//                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*").hasRole("ADMIN")
+//
+//                // 🚚 RUTAS - Solo ADMIN puede asignar/desasignar rutas
+//                .requestMatchers(HttpMethod.PUT, "/api/solicitudes/*/asignar-ruta").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*/desasignar-ruta").hasRole("ADMIN")
+//
+//                // 📦 CONTENEDORES PENDIENTES - Solo ADMIN puede consultar contenedores pendientes
+//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedores-pendientes").hasRole("ADMIN")
+//
+//                // 📦 CONTENEDORES - Solo ADMIN puede gestionar contenedores
+//                .requestMatchers(HttpMethod.GET, "/api/contenedores").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.GET, "/api/contenedores/*").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.POST, "/api/contenedores").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.PUT, "/api/contenedores/*").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.DELETE, "/api/contenedores/*").hasRole("ADMIN")
+//
+//                // 👥 CLIENTES - Solo ADMIN puede gestionar clientes
+//                .requestMatchers(HttpMethod.GET, "/api/clientes").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.GET, "/api/clientes/*").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.GET, "/api/clientes/dni/*").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.GET, "/api/clientes/mail/*").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.POST, "/api/clientes").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.PUT, "/api/clientes/*").hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.DELETE, "/api/clientes/*").hasRole("ADMIN")
+//
+//                // Cualquier otra petición requiere autenticación
+//                .anyRequest().authenticated()
 
-                // 📋 SOLICITUDES - CLIENTE puede crear y consultar sus solicitudes
-                .requestMatchers(HttpMethod.POST, "/api/solicitudes").hasRole("CLIENTE")
-                .requestMatchers(HttpMethod.POST, "/api/solicitudes/completa").hasRole("CLIENTE")
-                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedor/*/estado").hasRole("CLIENTE")
-                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*/rutas").hasAnyRole("CLIENTE", "ADMIN")
 
-                // 📋 SOLICITUDES - ADMIN puede ver todas las solicitudes y eliminar
-                .requestMatchers(HttpMethod.GET, "/api/solicitudes").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*").hasAnyRole("CLIENTE", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*").hasRole("ADMIN")
-
-                // 🚚 RUTAS - Solo ADMIN puede asignar/desasignar rutas
-                .requestMatchers(HttpMethod.PUT, "/api/solicitudes/*/asignar-ruta").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*/desasignar-ruta").hasRole("ADMIN")
-
-                // 📦 CONTENEDORES PENDIENTES - Solo ADMIN puede consultar contenedores pendientes
-                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedores-pendientes").hasRole("ADMIN")
-
-                // 📦 CONTENEDORES - Solo ADMIN puede gestionar contenedores
-                .requestMatchers(HttpMethod.GET, "/api/contenedores").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/contenedores/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/contenedores").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/contenedores/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/contenedores/*").hasRole("ADMIN")
-
-                // 👥 CLIENTES - Solo ADMIN puede gestionar clientes
-                .requestMatchers(HttpMethod.GET, "/api/clientes").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/clientes/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/clientes/dni/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/clientes/mail/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/clientes").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/clientes/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/clientes/*").hasRole("ADMIN")
-
-                // Cualquier otra petición requiere autenticación
-                .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
             );
-
         return http.build();
     }
 

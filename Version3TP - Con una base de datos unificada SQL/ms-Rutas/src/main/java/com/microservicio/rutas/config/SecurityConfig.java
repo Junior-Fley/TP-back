@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -40,11 +41,11 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+//@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
+//    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+//    private String issuerUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -53,38 +54,44 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public / swagger
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
 
-                        // Rutas
-                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/tentativa").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/resumen").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
-                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
+                        .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
 
-                        // Tramos
-                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*/asignar-camion/*").hasRole("ADMIN")
+//
+//                        // Public / swagger
+//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+//
+//                        // Rutas
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/tentativa").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/resumen").authenticated()
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
+//                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
+//
+//                        // Tramos
+//                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
+//                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*/asignar-camion/*").hasRole("ADMIN")
+//
+//                        // Depositos - gestión por ADMIN
+//                        .requestMatchers(HttpMethod.GET, "/api/depositos").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/depositos/*").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
+//
+//                        // Estados y tipos - autenticado
+//                        .requestMatchers(HttpMethod.GET, "/api/estados-tramo").authenticated()
+//                        .requestMatchers(HttpMethod.GET, "/api/tipos-tramo").authenticated()
+//
+//                        // Cualquier otra petición requiere autenticación
+//                        .anyRequest().authenticated()
 
-                        // Depositos - gestión por ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/depositos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/depositos/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
 
-                        // Estados y tipos - autenticado
-                        .requestMatchers(HttpMethod.GET, "/api/estados-tramo").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/tipos-tramo").authenticated()
-
-                        // Cualquier otra petición requiere autenticación
-                        .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
@@ -115,20 +122,46 @@ public class SecurityConfig {
     }
 
     /**
-     * Configuración personalizada del JwtDecoder con clock-skew.
-     * Permite un margen de 120 segundos para diferencias de sincronización horaria.
+     * ⚠️ IMPORTANTE: Configuración LAZY del JwtDecoder.
+     *
+     * La conexión a Keycloak se realiza de forma PEREZOSA (lazy), es decir,
+     * solo cuando se necesita validar un token JWT, NO al arrancar la aplicación.
+     *
+     * Esto permite que el microservicio arranque sin problemas incluso si Keycloak
+     * no está disponible. El error solo ocurrirá si se intenta validar un JWT.
      */
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
-
-        // Configura validador de timestamp con clock-skew de 120 segundos
-        JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
-        OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
-
-        jwtDecoder.setJwtValidator(withClockSkew);
-        return jwtDecoder;
-    }
+//    @Bean
+//    public JwtDecoder jwtDecoder() {
+//        // Crear un JwtDecoder que se inicializa de forma lazy
+//        return new JwtDecoder() {
+//            private volatile JwtDecoder delegate;
+//
+//            @Override
+//            public Jwt decode(String token) throws JwtException {
+//                if (delegate == null) {
+//                    synchronized (this) {
+//                        if (delegate == null) {
+//                            try {
+//                                // Aquí es donde se conecta a Keycloak
+//                                NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
+//
+//                                // Configura validador de timestamp con clock-skew de 120 segundos
+//                                JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
+//                                OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
+//
+//                                jwtDecoder.setJwtValidator(withClockSkew);
+//                                delegate = jwtDecoder;
+//                            } catch (Exception e) {
+//                                throw new JwtException("❌ No se pudo conectar a Keycloak en: " + issuerUri +
+//                                    ". Asegúrate de que Keycloak esté corriendo.", e);
+//                            }
+//                        }
+//                    }
+//                }
+//                return delegate.decode(token);
+//            }
+//        };
+//    }
 
     static class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
         @Override
@@ -160,4 +193,3 @@ public class SecurityConfig {
         }
     }
 }
-

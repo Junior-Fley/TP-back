@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO para representar el costo de entrega de una ruta completa
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
