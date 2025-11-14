@@ -13,4 +13,6 @@ public class RutaResumenDTO {
     private Integer cantidadTramos;
     private Integer cantidadDepositos;
     private BigDecimal costoAproximado;
+    private Double tiempoEstimadoMin; // ⭐ NUEVO: Tiempo estimado en minutos
+    private Double distanciaTotalKm; // ⭐ NUEVO: Distancia total en kilómetros
 }

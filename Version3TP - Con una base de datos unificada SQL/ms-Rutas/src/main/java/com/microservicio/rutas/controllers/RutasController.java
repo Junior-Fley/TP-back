@@ -1,8 +1,8 @@
 package com.microservicio.rutas.controllers;
 
 
+import com.microservicio.rutas.dtos.RutaConTramosDTO;
 import com.microservicio.rutas.dtos.RutaResumenDTO;
-import com.microservicio.rutas.dtos.RutaTentativaDTO;
 import com.microservicio.rutas.models.Rutas;
 import com.microservicio.rutas.services.RutasService;
 import lombok.RequiredArgsConstructor;
@@ -61,16 +61,16 @@ public class RutasController {
     // sugeridos y el tiempo y costo estimados (Operador / Administrador)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/tentativas")
-    public ResponseEntity<List<RutaTentativaDTO>> obtenerRutasTentativas() {
-        List<RutaTentativaDTO> rutasTentativas = service.obtenerRutasTentativas();
+    public ResponseEntity<List<RutaConTramosDTO>> obtenerRutasTentativas() {
+        List<RutaConTramosDTO> rutasTentativas = service.obtenerRutasTentativas();
         return ResponseEntity.ok(rutasTentativas);
     }
 
     // 🔹 Obtener una ruta tentativa específica por ID con todos sus tramos
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/tentativa")
-    public ResponseEntity<RutaTentativaDTO> obtenerRutaTentativaPorId(@PathVariable("id") Long id) {
-        RutaTentativaDTO ruta = service.obtenerRutaTentativaPorId(id);
+    public ResponseEntity<RutaConTramosDTO> obtenerRutaTentativaPorId(@PathVariable("id") Long id) {
+        RutaConTramosDTO ruta = service.obtenerRutaTentativaPorId(id);
         if (ruta == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(ruta);
     }
@@ -108,46 +108,30 @@ public class RutasController {
     }
 
     /**
-     * 🛠️ UTILIDAD: Asigna manualmente un tramo a una ruta
-     * PUT /api/rutas/{idRuta}/asignar-tramo/{idTramo}
+     * ⭐ NUEVO: Crea una ruta definitiva a partir de una ruta tentativa seleccionada
+     *
+     * POST /api/rutas/crear-desde-tentativa
+     *
+     * Body ejemplo:
+     * {
+     *   "idSolicitud": 1,
+     *   "tipoRuta": "CON_1_DEPOSITO",
+     *   "latitudOrigen": -31.4201,
+     *   "longitudOrigen": -64.1888,
+     *   "latitudDestino": -34.6037,
+     *   "longitudDestino": -58.3816,
+     *   "tramos": [ ... ] // Array de tramos tal como viene de /api/rutas/tentativas
+     * }
      */
-    @PutMapping("/{idRuta}/asignar-tramo/{idTramo}")
-    public ResponseEntity<String> asignarTramoARuta(
-            @PathVariable("idRuta") Long idRuta,
-            @PathVariable("idTramo") Long idTramo) {
+    // @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')") // ⚠️ COMENTADO - Sin autenticación
+    @PostMapping("/crear-desde-tentativa")
+    public ResponseEntity<?> crearRutaDesdeTentativa(
+            @RequestBody com.microservicio.rutas.dtos.CrearRutaDesdeTeantativaDTO dto) {
         try {
-            String resultado = service.asignarTramoARuta(idRuta, idTramo);
-            return ResponseEntity.ok(resultado);
+            Rutas rutaCreada = service.crearRutaDesdeTentativa(dto);
+            return ResponseEntity.status(201).body(rutaCreada);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+            return ResponseEntity.status(400).body("Error al crear ruta: " + e.getMessage());
         }
     }
-
-    /**
-     * 🛠️ DEBUG: Lista todos los tramos y su estado de asignación a rutas
-     * GET /api/rutas/debug/tramos
-     */
-    @GetMapping("/debug/tramos")
-    public ResponseEntity<?> listarTodosLosTramosConEstado() {
-        try {
-            return ResponseEntity.ok(service.listarTodosLosTramosConEstado());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 🛠️ UTILIDAD: Recalcula el campo cantidadTramos de todas las rutas
-     * POST /api/rutas/recalcular-cantidad-tramos
-     */
-    @PostMapping("/recalcular-cantidad-tramos")
-    public ResponseEntity<String> recalcularCantidadTramos() {
-        try {
-            String resultado = service.recalcularCantidadTramos();
-            return ResponseEntity.ok(resultado);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
-    }
-
 }

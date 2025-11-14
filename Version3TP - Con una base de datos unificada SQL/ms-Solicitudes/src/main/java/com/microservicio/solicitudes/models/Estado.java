@@ -6,11 +6,13 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Estado_solicitud")
+@Table(name = "estado")
 public class Estado {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_estado")
     private Long idEstado;
 
+    @Column(name = "nombre")
     private String nombre;
 }

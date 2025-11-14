@@ -31,21 +31,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Configuración de seguridad para ms-Rutas usando Keycloak como Resource Server (JWT).
- * Se habilitan los roles definidos en el enunciado: CLIENTE, ADMIN, TRANSPORTISTA.
- *
- * Decisiones tomadas (suposiciones razonables):
- * - La mayoría de operaciones de gestión (crear, modificar, eliminar) quedan restringidas a ADMIN.
- * - Visualización específica (por id) puede ser accesible a TRANSPORTISTA cuando aplica.
- * - Endpoints referidos a cálculo/tentativas son ADMIN (según comentarios en los controladores).
+ * ⚠️ SEGURIDAD TEMPORALMENTE DESACTIVADA
+ * Configuración de seguridad para ms-Rutas SIN Keycloak
+ * Para desarrollo y pruebas sin autenticación
  */
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-//    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-//    private String issuerUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -54,47 +46,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
-                        .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
-
-//
-//                        // Public / swagger
-//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-//
-//                        // Rutas
-//                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/tentativa").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/resumen").authenticated()
-//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
-//                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
-//
-//                        // Tramos
-//                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
-//                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*/asignar-camion/*").hasRole("ADMIN")
-//
-//                        // Depositos - gestión por ADMIN
-//                        .requestMatchers(HttpMethod.GET, "/api/depositos").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/depositos/*").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
-//
-//                        // Estados y tipos - autenticado
-//                        .requestMatchers(HttpMethod.GET, "/api/estados-tramo").authenticated()
-//                        .requestMatchers(HttpMethod.GET, "/api/tipos-tramo").authenticated()
-//
-//                        // Cualquier otra petición requiere autenticación
-//                        .anyRequest().authenticated()
-
-
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .anyRequest().permitAll() // ⚠️ PERMITE TODO - Solo para desarrollo
                 );
 
         return http.build();
@@ -113,6 +65,69 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+}
+
+/* ========================================
+ * 🔒 CONFIGURACIÓN CON KEYCLOAK (COMENTADA)
+ * ========================================
+ * Para reactivar Keycloak:
+ * 1. Descomenta toda la configuración de abajo
+ * 2. Comenta la configuración simple de arriba
+ * 3. Descomenta @EnableMethodSecurity
+ * 4. Descomenta las propiedades de Keycloak en application.properties
+ * 5. Asegúrate de que Keycloak esté corriendo
+ */
+
+/*
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+public class SecurityConfig {
+
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Public / swagger
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+
+                        // Rutas
+                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/*\/tentativa").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/*\/resumen").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
+
+                        // Tramos
+                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
+                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*\/asignar-camion/*").hasRole("ADMIN")
+
+                        // Depositos
+                        .requestMatchers(HttpMethod.GET, "/api/depositos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/depositos/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
+
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                );
+
+        return http.build();
+    }
 
     @Bean
     public Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
@@ -121,75 +136,31 @@ public class SecurityConfig {
         return jwtAuthenticationConverter;
     }
 
-    /**
-     * ⚠️ IMPORTANTE: Configuración LAZY del JwtDecoder.
-     *
-     * La conexión a Keycloak se realiza de forma PEREZOSA (lazy), es decir,
-     * solo cuando se necesita validar un token JWT, NO al arrancar la aplicación.
-     *
-     * Esto permite que el microservicio arranque sin problemas incluso si Keycloak
-     * no está disponible. El error solo ocurrirá si se intenta validar un JWT.
-     */
-//    @Bean
-//    public JwtDecoder jwtDecoder() {
-//        // Crear un JwtDecoder que se inicializa de forma lazy
-//        return new JwtDecoder() {
-//            private volatile JwtDecoder delegate;
-//
-//            @Override
-//            public Jwt decode(String token) throws JwtException {
-//                if (delegate == null) {
-//                    synchronized (this) {
-//                        if (delegate == null) {
-//                            try {
-//                                // Aquí es donde se conecta a Keycloak
-//                                NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
-//
-//                                // Configura validador de timestamp con clock-skew de 120 segundos
-//                                JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
-//                                OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
-//
-//                                jwtDecoder.setJwtValidator(withClockSkew);
-//                                delegate = jwtDecoder;
-//                            } catch (Exception e) {
-//                                throw new JwtException("❌ No se pudo conectar a Keycloak en: " + issuerUri +
-//                                    ". Asegúrate de que Keycloak esté corriendo.", e);
-//                            }
-//                        }
-//                    }
-//                }
-//                return delegate.decode(token);
-//            }
-//        };
-//    }
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return new JwtDecoder() {
+            private volatile JwtDecoder delegate;
 
-    static class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
-        @Override
-        public Collection<GrantedAuthority> convert(Jwt jwt) {
-            Collection<String> roles = new ArrayList<>();
-
-            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
-            if (realmAccess != null && realmAccess.containsKey("roles")) {
-                Collection<String> realmRoles = (Collection<String>) realmAccess.get("roles");
-                roles.addAll(realmRoles);
-            }
-
-            Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
-            if (resourceAccess != null) {
-                for (Object clientAccess : resourceAccess.values()) {
-                    if (clientAccess instanceof Map) {
-                        Map<String, Object> clientAccessMap = (Map<String, Object>) clientAccess;
-                        if (clientAccessMap.containsKey("roles")) {
-                            Collection<String> clientRoles = (Collection<String>) clientAccessMap.get("roles");
-                            roles.addAll(clientRoles);
+            @Override
+            public Jwt decode(String token) throws JwtException {
+                if (delegate == null) {
+                    synchronized (this) {
+                        if (delegate == null) {
+                            try {
+                                NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
+                                JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
+                                OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
+                                jwtDecoder.setJwtValidator(withClockSkew);
+                                delegate = jwtDecoder;
+                            } catch (Exception e) {
+                                throw new JwtException("Error al inicializar JwtDecoder: " + e.getMessage(), e);
+                            }
                         }
                     }
                 }
+                return delegate.decode(token);
             }
-
-            return roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                    .collect(Collectors.toList());
-        }
+        };
     }
 }
+*/

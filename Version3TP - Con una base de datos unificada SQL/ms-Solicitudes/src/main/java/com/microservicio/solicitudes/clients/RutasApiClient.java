@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -39,26 +41,64 @@ public class RutasApiClient {
     }
 
     /**
-     * Obtiene una ruta por ID desde ms-rutas
+     * ⭐ MEJORADO: Obtiene una ruta por ID desde ms-rutas
+     * Mapea la respuesta completa y extrae correctamente todos los datos
      */
     public RutaResumenDTO obtenerRutaRaw(Long idRuta) {
         try {
             log.info("🔍 Consultando ruta {} en ms-rutas", idRuta);
 
-            RutaResumenDTO ruta = rutasRestClient.get()
+            // Obtener la respuesta como Map para manejar la estructura completa
+            Map<String, Object> rutaMap = rutasRestClient.get()
                     .uri("/{id}", idRuta)
                     .retrieve()
-                    .body(RutaResumenDTO.class);
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
-            if (ruta != null) {
-                log.info("✅ Ruta obtenida: ID={}, Tramos={}, Depositos={}, Costo={}",
-                        ruta.getIdRuta(), ruta.getCantidadTramos(),
-                        ruta.getCantidadDepositos(), ruta.getCostoAproximado());
+            if (rutaMap == null) {
+                log.warn("⚠️ Ruta {} no encontrada", idRuta);
+                return null;
             }
+
+            // Extraer y convertir los datos
+            RutaResumenDTO ruta = new RutaResumenDTO();
+            ruta.setIdRuta(((Number) rutaMap.get("idRuta")).longValue());
+
+            if (rutaMap.get("cantidadTramos") != null) {
+                ruta.setCantidadTramos(((Number) rutaMap.get("cantidadTramos")).intValue());
+            }
+
+            if (rutaMap.get("cantidadDepositos") != null) {
+                ruta.setCantidadDepositos(((Number) rutaMap.get("cantidadDepositos")).intValue());
+            }
+
+            // ⭐ IMPORTANTE: Usar costoTotal en lugar de costoAproximado
+            if (rutaMap.get("costoTotal") != null) {
+                ruta.setCostoAproximado(new BigDecimal(rutaMap.get("costoTotal").toString()));
+            }
+
+            if (rutaMap.get("tiempoEstimadoMin") != null) {
+                ruta.setTiempoEstimadoMin(((Number) rutaMap.get("tiempoEstimadoMin")).doubleValue());
+            }
+
+            if (rutaMap.get("distanciaTotal") != null) {
+                ruta.setDistanciaTotalKm(((Number) rutaMap.get("distanciaTotal")).doubleValue());
+            }
+
+            log.info("✅ Ruta obtenida: ID={}, Tramos={}, Depositos={}, Costo={}, Tiempo={} min, Distancia={} km",
+                    ruta.getIdRuta(),
+                    ruta.getCantidadTramos(),
+                    ruta.getCantidadDepositos(),
+                    ruta.getCostoAproximado(),
+                    ruta.getTiempoEstimadoMin(),
+                    ruta.getDistanciaTotalKm());
 
             return ruta;
         } catch (RestClientException e) {
             log.error("❌ Error al consultar ruta {}: {}", idRuta, e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.error("❌ Error al procesar datos de ruta {}: {}", idRuta, e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

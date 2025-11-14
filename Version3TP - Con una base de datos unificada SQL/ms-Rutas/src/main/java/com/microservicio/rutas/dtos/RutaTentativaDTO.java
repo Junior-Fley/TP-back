@@ -8,19 +8,25 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * DTO para consultar rutas tentativas con todos los tramos sugeridos
- * y el tiempo y costo estimados (Requerimiento Funcional #3)
+ * DTO que representa una ruta tentativa completa
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RutaTentativaDTO {
-    private Long idRuta;
+    private String tipo; // "DIRECTA", "CON_1_DEPOSITO", "CON_2_DEPOSITOS"
+    private String descripcion; // Descripción legible
     private Integer cantidadTramos;
-    private Integer cantidadDepositos;
+
+    // Lista de tramos que componen esta ruta
+    private List<TramoTentativoDTO> tramos;
+
+    // Totales calculados
     private Double distanciaTotalKm;
-    private Double tiempoEstimadoMinutos;
-    private BigDecimal costoTotalEstimado;
-    private List<TramoSugeridoDTO> tramosSugeridos;
+    private Double duracionTotalMinutos;
+    private BigDecimal costoTotalAproximado;
+
+    // Información adicional
+    private List<String> depositosIntermedios; // Nombres de depósitos
 }
 

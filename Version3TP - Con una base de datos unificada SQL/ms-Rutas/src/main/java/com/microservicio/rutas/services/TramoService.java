@@ -1,6 +1,7 @@
 package com.microservicio.rutas.services;
 
 import com.microservicio.rutas.clients.CamionesApiClient;
+import com.microservicio.rutas.clients.SolicitudesApiClient;
 import com.microservicio.rutas.clients.TarifasApiClient;
 import com.microservicio.rutas.dtos.CamionDTO;
 import com.microservicio.rutas.dtos.CostoEntregaDTO;
@@ -33,6 +34,7 @@ public class TramoService {
     private final TramoRepository repo;
     private final CamionesApiClient camionesApiClient;
     private final TarifasApiClient tarifasApiClient;
+    private final SolicitudesApiClient solicitudesApiClient;
     private final EstadoTramoRepository estadoTramoRepository;
 
     public List<Tramo> obtenerTodos() {
@@ -138,6 +140,8 @@ public class TramoService {
 
     /**
      * Registra el inicio de un tramo (Transportista)
+     * Si es el primer tramo de la ruta, notifica al microservicio de Solicitudes
+     * para cambiar el estado del contenedor a "en tránsito"
      */
     @Transactional
     public Tramo iniciarTramo(Long idTramo, IniciarTramoDTO dto) {
@@ -174,6 +178,25 @@ public class TramoService {
             log.warn("⚠️ No se pudo actualizar disponibilidad del camión: {}", e.getMessage());
         }
 
+        // ⭐ NUEVO: Verificar si es el primer tramo de la ruta y notificar a Solicitudes
+        if (tramo.getRuta() != null) {
+            Long idRuta = tramo.getRuta().getIdRuta();
+            List<Tramo> tramosRuta = repo.findByRutaIdRuta(idRuta);
+
+            // Contar cuántos tramos ya están iniciados o finalizados
+            long tramosEnCurso = tramosRuta.stream()
+                .filter(t -> t.getEstado() != null &&
+                       ("iniciado".equalsIgnoreCase(t.getEstado().getNombre()) ||
+                        "finalizado".equalsIgnoreCase(t.getEstado().getNombre())))
+                .count();
+
+            // Si este es el primer tramo que se inicia, notificar a Solicitudes
+            if (tramosEnCurso == 0 && tramo.getRuta().getIdSolicitud() != null) {
+                log.info("📦 Primer tramo de la ruta iniciado. Notificando cambio de estado del contenedor a 'en tránsito'");
+                solicitudesApiClient.notificarInicioTransito(tramo.getRuta().getIdSolicitud());
+            }
+        }
+
         Tramo tramoGuardado = repo.save(tramo);
         log.info("✅ Tramo iniciado exitosamente a las {}", fechaInicio);
 
@@ -182,6 +205,8 @@ public class TramoService {
 
     /**
      * Registra la finalización de un tramo y calcula el costo real (Transportista)
+     * Si es el último tramo de la ruta, notifica al microservicio de Solicitudes
+     * para finalizar la solicitud y cambiar el contenedor a "entregado"
      */
     @Transactional
     public Tramo finalizarTramo(Long idTramo, FinalizarTramoDTO dto) {
@@ -226,6 +251,23 @@ public class TramoService {
         Tramo tramoGuardado = repo.save(tramo);
         log.info("✅ Tramo finalizado. Costo real: ${}", costoReal.getCostoTotal());
         log.info("📊 Detalle: {}", costoReal.getDetalleCalculo());
+
+        // ⭐ NUEVO: Verificar si este es el último tramo de la ruta y notificar a Solicitudes
+        if (tramo.getRuta() != null) {
+            Long idRuta = tramo.getRuta().getIdRuta();
+            List<Tramo> tramosRuta = repo.findByRutaIdRuta(idRuta);
+
+            // Verificar si TODOS los tramos están finalizados
+            boolean todosTramosFinalizados = tramosRuta.stream()
+                .allMatch(t -> t.getEstado() != null &&
+                       "finalizado".equalsIgnoreCase(t.getEstado().getNombre()));
+
+            // Si todos los tramos están finalizados, notificar a Solicitudes para finalizar automáticamente
+            if (todosTramosFinalizados && tramo.getRuta().getIdSolicitud() != null) {
+                log.info("📦 Último tramo de la ruta finalizado. Notificando finalización de solicitud y cambio de contenedor a 'entregado'");
+                solicitudesApiClient.notificarFinalizacionTodosTramos(tramo.getRuta().getIdSolicitud());
+            }
+        }
 
         return tramoGuardado;
     }

@@ -4,15 +4,18 @@ package com.microservicio.solicitudes.controllers;
 import com.microservicio.solicitudes.clients.RutasApiClient;
 import com.microservicio.solicitudes.dtos.AsignarRutaDTO;
 import com.microservicio.solicitudes.dtos.ContenedorPendienteDTO;
+import com.microservicio.solicitudes.dtos.CrearSolicitudDTO;
 import com.microservicio.solicitudes.dtos.EstadoContenedorDTO;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
 import com.microservicio.solicitudes.models.Solicitud;
 import com.microservicio.solicitudes.services.SolicitudService;
+import com.microservicio.solicitudes.services.ContenedorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -21,17 +24,38 @@ public class SolicitudController {
 
     private final SolicitudService service;
     private final RutasApiClient rutasApiClient;
+    private final ContenedorService contenedorService;
 
 
-    public SolicitudController(SolicitudService service, RutasApiClient rutasApiClient) {
+    public SolicitudController(SolicitudService service, RutasApiClient rutasApiClient, ContenedorService contenedorService) {
         this.service = service;
         this.rutasApiClient = rutasApiClient;
+        this.contenedorService = contenedorService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<Solicitud>> listar() {
         return ResponseEntity.ok(service.obtenerTodas());
+    }
+
+    /**
+     * ⭐ NUEVO ENDPOINT SIMPLIFICADO
+     * Crear solicitud solo con ID de cliente e ID de contenedor
+     * POST /api/solicitudes/crear
+     * Body: { "idCliente": 1, "idContenedor": 2 }
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    @PostMapping("/crear")
+    public ResponseEntity<?> crearSolicitudSimple(@RequestBody CrearSolicitudDTO dto) {
+        try {
+            Solicitud solicitud = service.crearSolicitudSimple(dto);
+            return ResponseEntity.status(201).body(solicitud);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
+        }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
@@ -240,6 +264,65 @@ public class SolicitudController {
             return ResponseEntity.ok(service.obtenerResumenCostos(id));
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Endpoint para que el microservicio de Rutas notifique el inicio del primer tramo
+     * Cambia el estado de la solicitud a "en proceso" y el contenedor a "en tránsito"
+     */
+    @PutMapping("/{idSolicitud}/contenedor/iniciar-transito")
+    public ResponseEntity<?> iniciarTransitoContenedor(@PathVariable Long idSolicitud) {
+        try {
+            Solicitud solicitud = service.obtenerPorId(idSolicitud);
+            if (solicitud == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if (solicitud.getContenedor() == null) {
+                return ResponseEntity.badRequest().body("La solicitud no tiene un contenedor asignado");
+            }
+
+            // Cambiar estado del contenedor a "en tránsito"
+            contenedorService.cambiarEstadoEnTransito(solicitud.getContenedor().getIdContenedor());
+
+            // Cambiar estado de la solicitud a "en proceso"
+            service.cambiarEstadoEnProceso(idSolicitud);
+
+            java.util.HashMap<String, Object> response = new java.util.HashMap<>();
+            response.put("message", "Solicitud en proceso y contenedor en tránsito");
+            response.put("idSolicitud", idSolicitud);
+            response.put("idContenedor", solicitud.getContenedor().getIdContenedor());
+            response.put("estadoSolicitud", "en proceso");
+            response.put("estadoContenedor", "en tránsito");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Endpoint para que el microservicio de Rutas notifique la finalización del último tramo
+     * Cambia el estado de la solicitud a "completada" y el contenedor a "entregado"
+     */
+    @PutMapping("/{idSolicitud}/finalizar")
+    public ResponseEntity<?> finalizarSolicitudAutomatica(@PathVariable Long idSolicitud) {
+        try {
+            Solicitud solicitud = service.finalizarSolicitud(idSolicitud);
+
+            java.util.HashMap<String, Object> response = new java.util.HashMap<>();
+            response.put("message", "Solicitud completada y contenedor entregado");
+            response.put("idSolicitud", idSolicitud);
+            response.put("estadoSolicitud", "completada");
+            response.put("costoFinal", solicitud.getCostoFinal());
+            response.put("tiempoReal", solicitud.getTiempoReal());
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body("Error: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
         }

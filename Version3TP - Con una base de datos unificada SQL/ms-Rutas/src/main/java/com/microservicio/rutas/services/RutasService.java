@@ -2,25 +2,34 @@ package com.microservicio.rutas.services;
 
 
 import com.microservicio.rutas.dtos.RutaResumenDTO;
-import com.microservicio.rutas.dtos.RutaTentativaDTO;
+import com.microservicio.rutas.dtos.RutaConTramosDTO;
 import com.microservicio.rutas.dtos.TramoSugeridoDTO;
 import com.microservicio.rutas.models.Rutas;
 import com.microservicio.rutas.models.Tramo;
 import com.microservicio.rutas.repositories.RutasRepository;
 import com.microservicio.rutas.repositories.TramoRepository;
+import com.microservicio.rutas.repositories.EstadoTramoRepository;
+import com.microservicio.rutas.repositories.TipoTramoRepository;
+import com.microservicio.rutas.repositories.DepositoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RutasService {
 
     private final RutasRepository repo;
     private final TramoRepository tramoRepository;
+    private final EstadoTramoRepository estadoTramoRepository;
+    private final TipoTramoRepository tipoTramoRepository;
+    private final DepositoRepository depositoRepository;
 
     // 🔹 Obtener todas las rutas
     public List<Rutas> obtenerTodas() {
@@ -63,11 +72,14 @@ public class RutasService {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
 
+        // ⭐ MEJORADO: Incluir tiempo estimado y distancia total
         return new RutaResumenDTO(
                 ruta.getIdRuta(),
                 ruta.getCantidadTramos(),
                 ruta.getCantidadDepositos(),
-                costoAproximado
+                ruta.getCostoTotal() != null ? BigDecimal.valueOf(ruta.getCostoTotal()) : costoAproximado,
+                ruta.getTiempoEstimadoMin(),
+                ruta.getDistanciaTotal()
         );
     }
 
@@ -76,31 +88,30 @@ public class RutasService {
      * Consultar rutas tentativas con todos los tramos sugeridos y el tiempo y costo estimados
      * (Operador / Administrador)
      */
-    public List<RutaTentativaDTO> obtenerRutasTentativas() {
+    public List<RutaConTramosDTO> obtenerRutasTentativas() {
         List<Rutas> rutas = repo.findAll();
         return rutas.stream()
-                .map(this::convertirARutaTentativa)
+                .map(this::convertirARutaConTramos)
                 .collect(Collectors.toList());
     }
 
     /**
      * Obtener una ruta tentativa específica por ID
      */
-    public RutaTentativaDTO obtenerRutaTentativaPorId(Long id) {
+    public RutaConTramosDTO obtenerRutaTentativaPorId(Long id) {
         Rutas ruta = repo.findById(id).orElse(null);
         if (ruta == null) {
             return null;
         }
-        return convertirARutaTentativa(ruta);
+        return convertirARutaConTramos(ruta);
     }
 
     /**
-     * Convierte una entidad Rutas a RutaTentativaDTO con todos sus tramos
+     * Convierte una entidad Rutas a RutaConTramosDTO con todos sus tramos
      */
-    private RutaTentativaDTO convertirARutaTentativa(Rutas ruta) {
+    private RutaConTramosDTO convertirARutaConTramos(Rutas ruta) {
         // Calcular totales
         BigDecimal costoTotal = BigDecimal.ZERO;
-        Double tiempoTotal = 0.0;
 
         List<TramoSugeridoDTO> tramosSugeridos = null;
 
@@ -113,17 +124,14 @@ public class RutasService {
             costoTotal = ruta.getTramos().stream()
                     .map(t -> t.getCostoAproximado() != null ? t.getCostoAproximado() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // Calcular tiempo total (si existe lógica de tiempo por tramo)
-            // Por ahora usamos el tiempoEstimadoMin de la ruta si está disponible
         }
 
-        return new RutaTentativaDTO(
+        return new RutaConTramosDTO(
                 ruta.getIdRuta(),
                 ruta.getCantidadTramos(),
                 ruta.getCantidadDepositos(),
                 ruta.getDistanciaTotal(),
-                ruta.getTiempoEstimadoMin() != null ? ruta.getTiempoEstimadoMin() : tiempoTotal,
+                ruta.getTiempoEstimadoMin(),
                 ruta.getCostoTotal() != null ? BigDecimal.valueOf(ruta.getCostoTotal()) : costoTotal,
                 tramosSugeridos
         );
@@ -302,4 +310,119 @@ public class RutasService {
         return String.format("Se actualizaron %d rutas con la cantidad correcta de tramos", rutasActualizadas);
     }
 
+    /**
+     * ⭐ NUEVO: Crea una ruta definitiva a partir de una ruta tentativa seleccionada
+     *
+     * Este método permite crear una ruta real en la base de datos con todos sus tramos,
+     * basándose en los datos calculados por el servicio de rutas tentativas.
+     *
+     * @param dto DTO con los datos de la ruta tentativa seleccionada
+     * @return Ruta creada con todos sus tramos
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public Rutas crearRutaDesdeTentativa(com.microservicio.rutas.dtos.CrearRutaDesdeTeantativaDTO dto) {
+        log.info("🚀 Creando ruta definitiva desde tentativa tipo: {}", dto.getTipoRuta());
+
+        // 1. Crear la entidad Ruta
+        Rutas ruta = new Rutas();
+        ruta.setIdSolicitud(dto.getIdSolicitud());
+        ruta.setCantidadTramos(dto.getTramos().size());
+
+        // Contar depósitos intermedios
+        long depositosIntermedios = dto.getTramos().stream()
+                .filter(t -> t.getIdDepositoDestino() != null)
+                .count();
+        ruta.setCantidadDepositos((int) depositosIntermedios);
+
+        // Calcular totales desde los tramos
+        double distanciaTotal = 0.0;
+        double tiempoTotal = 0.0;
+        BigDecimal costoTotal = BigDecimal.ZERO;
+
+        // 2. Crear los tramos asociados
+        List<Tramo> tramos = new ArrayList<>();
+        for (com.microservicio.rutas.dtos.TramoTentativoDTO tramoDTO : dto.getTramos()) {
+            Tramo tramo = new Tramo();
+
+            // Coordenadas
+            tramo.setLatitudOrigen(tramoDTO.getLatitudOrigen());
+            tramo.setLongitudOrigen(tramoDTO.getLongitudOrigen());
+            tramo.setLatitudDestino(tramoDTO.getLatitudDestino());
+            tramo.setLongitudDestino(tramoDTO.getLongitudDestino());
+
+            // Datos calculados
+            tramo.setDistanciaKm(tramoDTO.getDistanciaKm());
+            tramo.setCostoAproximado(tramoDTO.getCostoAproximado());
+
+            // Tipo de tramo
+            com.microservicio.rutas.models.TipoTramo tipoTramo = obtenerOCrearTipoTramo(tramoDTO.getTipoTramo());
+            tramo.setTipoTramo(tipoTramo);
+
+            // Estado inicial: "pendiente"
+            com.microservicio.rutas.models.EstadoTramo estadoPendiente =
+                estadoTramoRepository.findByNombre("pendiente")
+                    .orElseGet(() -> {
+                        com.microservicio.rutas.models.EstadoTramo nuevo = new com.microservicio.rutas.models.EstadoTramo();
+                        nuevo.setNombre("pendiente");
+                        return estadoTramoRepository.save(nuevo);
+                    });
+            tramo.setEstado(estadoPendiente);
+
+            // Depósitos (si existen)
+            if (tramoDTO.getIdDepositoOrigen() != null) {
+                com.microservicio.rutas.models.Deposito depositoOrigen =
+                    depositoRepository.findById(tramoDTO.getIdDepositoOrigen())
+                        .orElseThrow(() -> new RuntimeException("Depósito origen no encontrado: " + tramoDTO.getIdDepositoOrigen()));
+                tramo.setDepositoOrigen(depositoOrigen);
+            }
+
+            if (tramoDTO.getIdDepositoDestino() != null) {
+                com.microservicio.rutas.models.Deposito depositoDestino =
+                    depositoRepository.findById(tramoDTO.getIdDepositoDestino())
+                        .orElseThrow(() -> new RuntimeException("Depósito destino no encontrado: " + tramoDTO.getIdDepositoDestino()));
+                tramo.setDepositoDestino(depositoDestino);
+            }
+
+            // Relación bidireccional
+            tramo.setRuta(ruta);
+            tramos.add(tramo);
+
+            // Acumular totales
+            distanciaTotal += tramoDTO.getDistanciaKm() != null ? tramoDTO.getDistanciaKm() : 0.0;
+            tiempoTotal += tramoDTO.getDuracionMinutos() != null ? tramoDTO.getDuracionMinutos() : 0.0;
+            costoTotal = costoTotal.add(tramoDTO.getCostoAproximado() != null ? tramoDTO.getCostoAproximado() : BigDecimal.ZERO);
+
+            log.info("✅ Tramo {} creado: {} → {}", tramoDTO.getOrden(),
+                    tramoDTO.getNombreOrigen(), tramoDTO.getNombreDestino());
+        }
+
+        // 3. Asignar totales a la ruta
+        ruta.setDistanciaTotal(distanciaTotal);
+        ruta.setTiempoEstimadoMin(tiempoTotal);
+        ruta.setCostoTotal(costoTotal.doubleValue());
+        ruta.setTramos(tramos);
+
+        // 4. Guardar la ruta (cascade guardará los tramos automáticamente)
+        Rutas rutaGuardada = repo.save(ruta);
+
+        log.info("✅ Ruta definitiva creada con ID: {} | {} tramos | {} km | ${}",
+                rutaGuardada.getIdRuta(),
+                rutaGuardada.getCantidadTramos(),
+                String.format("%.2f", distanciaTotal),
+                costoTotal);
+
+        return rutaGuardada;
+    }
+
+    /**
+     * Helper para obtener o crear un tipo de tramo
+     */
+    private com.microservicio.rutas.models.TipoTramo obtenerOCrearTipoTramo(String nombre) {
+        return tipoTramoRepository.findByNombre(nombre)
+                .orElseGet(() -> {
+                    com.microservicio.rutas.models.TipoTramo nuevo = new com.microservicio.rutas.models.TipoTramo();
+                    nuevo.setNombre(nombre);
+                    return tipoTramoRepository.save(nuevo);
+                });
+    }
 }

@@ -1,8 +1,11 @@
 package com.microservicio.solicitudes.services;
 
 import com.microservicio.solicitudes.clients.RutasApiClient;
+import com.microservicio.solicitudes.constants.EstadoContenedor;
+import com.microservicio.solicitudes.constants.EstadoSolicitud;
 import com.microservicio.solicitudes.dtos.AsignarRutaDTO;
 import com.microservicio.solicitudes.dtos.ContenedorPendienteDTO;
+import com.microservicio.solicitudes.dtos.CrearSolicitudDTO;
 import com.microservicio.solicitudes.dtos.EstadoContenedorDTO;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
@@ -35,17 +38,20 @@ public class SolicitudService {
     private final RutasApiClient rutasApiClient;
     private final ClienteService clienteService;
     private final EstadoService estadoService;
+    private final ContenedorService contenedorService;
 
     public SolicitudService(SolicitudRepository repo,
                             ContenedorRepository contRepo,
                             RutasApiClient rutasApiClient,
                             ClienteService clienteService,
-                            EstadoService estadoService) {
+                            EstadoService estadoService,
+                            ContenedorService contenedorService) {
         this.repo = repo;
         this.contRepo = contRepo;
         this.rutasApiClient = rutasApiClient;
         this.clienteService = clienteService;
         this.estadoService = estadoService;
+        this.contenedorService = contenedorService;
     }
 
     public List<Solicitud> obtenerTodas() {
@@ -65,7 +71,7 @@ public class SolicitudService {
     }
     /**
      * Crea una solicitud completa incluyendo:
-     * 1. Creación del contenedor con identificación única
+     * 1. Creación del contenedor con identificación única y estado "disponible"
      * 2. Registro del cliente si no existe previamente (busca por DNI)
      * 3. Asignación del estado inicial (por defecto "borrador")
      */
@@ -73,12 +79,13 @@ public class SolicitudService {
     public Solicitud crearSolicitudCompleta(SolicitudRequestDTO requestDTO) {
         try {
             System.out.println(">>> PASO 1: Creando contenedor...");
-            // 1. Crear el contenedor con su identificación única
+            // 1. Crear el contenedor con estado inicial "disponible"
             Contenedor contenedor = new Contenedor();
             contenedor.setPeso(requestDTO.getPesoContenedor());
             contenedor.setVolumen(requestDTO.getVolumenContenedor());
+            contenedor.setEstado(EstadoContenedor.DISPONIBLE); // Estado inicial automático
             contenedor = contRepo.save(contenedor);
-            System.out.println(">>> Contenedor creado con ID: " + contenedor.getIdContenedor());
+            System.out.println(">>> Contenedor creado con ID: " + contenedor.getIdContenedor() + " - Estado: " + contenedor.getEstado());
 
             System.out.println(">>> PASO 2: Buscando/creando cliente...");
             // 2. Obtener o crear el cliente si no existe (buscar por DNI)
@@ -102,12 +109,9 @@ public class SolicitudService {
                 System.out.println(">>> Cliente creado con ID: " + cliente.getIdCliente());
             }
 
-            System.out.println(">>> PASO 3: Obteniendo/creando estado...");
-            // 3. Determinar el estado inicial (por defecto "borrador")
-            String nombreEstado = requestDTO.getEstadoInicial() != null
-                    ? requestDTO.getEstadoInicial()
-                    : "borrador";
-            Estado estado = estadoService.obtenerOCrearPorNombre(nombreEstado);
+            System.out.println(">>> PASO 3: Obteniendo estado inicial...");
+            // 3. ⭐ REFACTORIZADO: Estado inicial siempre es "disponible" (ID=1)
+            Estado estado = estadoService.obtenerEstadoDisponible();
             System.out.println(">>> Estado obtenido: " + estado.getNombre() + " (ID: " + estado.getIdEstado() + ")");
 
             System.out.println(">>> PASO 4: Creando solicitud...");
@@ -128,6 +132,52 @@ public class SolicitudService {
             e.printStackTrace();
             throw e;
         }
+    }
+    /**
+     * ⭐ NUEVO MÉTODO SIMPLIFICADO
+     * Crea una solicitud solo con ID de cliente e ID de contenedor
+     * Estado inicial: "disponible" (ID=1)
+     */
+    @Transactional
+    public Solicitud crearSolicitudSimple(CrearSolicitudDTO dto) {
+        log.info("📝 Creando solicitud simple - Cliente ID: {}, Contenedor ID: {}",
+                dto.getIdCliente(), dto.getIdContenedor());
+
+        // 1. Validar que el cliente existe
+        Cliente cliente = clienteService.obtenerPorId(dto.getIdCliente());
+        if (cliente == null) {
+            log.error("❌ Cliente no encontrado con ID: {}", dto.getIdCliente());
+            throw new RuntimeException("Cliente no encontrado con ID: " + dto.getIdCliente());
+        }
+        log.info("✅ Cliente encontrado: {} {} (ID: {})",
+                cliente.getNombre(), cliente.getApellido(), cliente.getIdCliente());
+
+        // 2. Validar que el contenedor existe
+        Contenedor contenedor = contRepo.findById(dto.getIdContenedor())
+                .orElseThrow(() -> {
+                    log.error("❌ Contenedor no encontrado con ID: {}", dto.getIdContenedor());
+                    return new RuntimeException("Contenedor no encontrado con ID: " + dto.getIdContenedor());
+                });
+        log.info("✅ Contenedor encontrado: ID: {}, Estado: {}",
+                contenedor.getIdContenedor(), contenedor.getEstado());
+
+        // 3. ⭐ REFACTORIZADO: Estado inicial siempre es "disponible" (ID=1)
+        Estado estadoDisponible = estadoService.obtenerEstadoDisponible();
+        log.info("✅ Estado obtenido: {} (ID: {})",
+                estadoDisponible.getNombre(), estadoDisponible.getIdEstado());
+
+        // 4. Crear la solicitud
+        Solicitud solicitud = new Solicitud();
+        solicitud.setCliente(cliente);
+        solicitud.setContenedor(contenedor);
+        solicitud.setEstadoSolicitud(estadoDisponible);
+
+        log.info("💾 Guardando solicitud en base de datos...");
+        Solicitud solicitudGuardada = repo.save(solicitud);
+        log.info("✅ Solicitud creada exitosamente con ID: {} - Estado: disponible (ID=1)",
+                solicitudGuardada.getNumeroSolicitud());
+
+        return solicitudGuardada;
     }
     /**
      * Consultar el estado del transporte de un contenedor (Cliente)
@@ -153,9 +203,10 @@ public class SolicitudService {
     /**
      * 🔹 Requerimiento Funcional #4:
      * Asignar una ruta con todos sus tramos a la solicitud (Operador/Administrador)
+     * Al asignar la ruta, cambia el estado del contenedor a "pendiente de entrega"
      *
      * @param idSolicitud ID de la solicitud
-     * @param asignarRutaDTO DTO con información de la ruta a asignar
+     * @param asignarRutaDTO DTO con información de la ruta a asignar (solo requiere idRuta)
      * @return Solicitud actualizada with la ruta asignada
      */
     @Transactional
@@ -164,40 +215,66 @@ public class SolicitudService {
         Solicitud solicitud = repo.findById(idSolicitud)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
 
-        // 2. Validar que la ruta existe en el microservicio de rutas
+        // 2. Validar que la ruta existe en el microservicio de rutas y obtener todos sus datos
         RutaResumenDTO rutaResumen = rutasApiClient.obtenerRutaRaw(asignarRutaDTO.getIdRuta());
         if (rutaResumen == null) {
             throw new RuntimeException("Ruta no encontrada con ID: " + asignarRutaDTO.getIdRuta());
         }
 
+        log.info("📦 Asignando ruta {} a solicitud {}", asignarRutaDTO.getIdRuta(), idSolicitud);
+        log.info("   ├─ Tramos: {}", rutaResumen.getCantidadTramos());
+        log.info("   ├─ Depósitos: {}", rutaResumen.getCantidadDepositos());
+        log.info("   ├─ Distancia: {} km", rutaResumen.getDistanciaTotalKm());
+        log.info("   ├─ Tiempo: {} min", rutaResumen.getTiempoEstimadoMin());
+        log.info("   └─ Costo: ${}", rutaResumen.getCostoAproximado());
+
         // 3. Asignar la ruta a la solicitud
         solicitud.setIdRuta(asignarRutaDTO.getIdRuta());
 
-        // 4. Actualizar costos y tiempos estimados
+        // 4. ⭐ MEJORADO: Calcular automáticamente costos y tiempos desde la ruta
+        // Si se proporcionan valores en el DTO, esos tienen prioridad
         if (asignarRutaDTO.getCostoEstimado() != null) {
             solicitud.setCostoEstimado(asignarRutaDTO.getCostoEstimado());
+            log.info("💰 Costo personalizado asignado: ${}", asignarRutaDTO.getCostoEstimado());
         } else if (rutaResumen.getCostoAproximado() != null) {
-            // Si no se proporciona costo, usar el de la ruta
+            // Usar el costo calculado de la ruta
             solicitud.setCostoEstimado(rutaResumen.getCostoAproximado());
+            log.info("💰 Costo automático desde ruta: ${}", rutaResumen.getCostoAproximado());
         }
 
         if (asignarRutaDTO.getTiempoEstimado() != null) {
             solicitud.setTiempoEstimado(asignarRutaDTO.getTiempoEstimado());
+            log.info("⏱️ Tiempo personalizado asignado: {} min", asignarRutaDTO.getTiempoEstimado());
+        } else if (rutaResumen.getTiempoEstimadoMin() != null) {
+            // Usar el tiempo calculado de la ruta (convertir de Double a Integer)
+            solicitud.setTiempoEstimado(rutaResumen.getTiempoEstimadoMin().intValue());
+            log.info("⏱️ Tiempo automático desde ruta: {} min", rutaResumen.getTiempoEstimadoMin().intValue());
         }
 
-        // 5. Actualizar el estado a "programada" si está en borrador
-        if (solicitud.getEstadoSolicitud() != null &&
-            "borrador".equalsIgnoreCase(solicitud.getEstadoSolicitud().getNombre())) {
-            Estado estadoProgramada = estadoService.obtenerOCrearPorNombre("programada");
-            solicitud.setEstadoSolicitud(estadoProgramada);
+        // 5. ⭐ REFACTORIZADO: Cambiar estado a "en proceso" (ID=2) al asignar ruta
+        Estado estadoEnProceso = estadoService.obtenerEstadoEnProceso();
+        solicitud.setEstadoSolicitud(estadoEnProceso);
+        log.info("🔄 Solicitud {} cambiada a estado: en proceso (ID=2)", idSolicitud);
+
+        // 6. ⭐ NUEVO: Cambiar estado del contenedor a "pendiente de entrega"
+        if (solicitud.getContenedor() != null) {
+            contenedorService.cambiarEstadoPendienteEntrega(solicitud.getContenedor().getIdContenedor());
+            log.info("📦 Contenedor {} cambiado a estado: {}",
+                    solicitud.getContenedor().getIdContenedor(),
+                    EstadoContenedor.PENDIENTE_ENTREGA);
         }
 
-        // 6. Guardar la solicitud actualizada
-        return repo.save(solicitud);
+        // 7. Guardar la solicitud actualizada
+        Solicitud solicitudGuardada = repo.save(solicitud);
+
+        log.info("✅ Ruta {} asignada exitosamente a solicitud {}", asignarRutaDTO.getIdRuta(), idSolicitud);
+
+        return solicitudGuardada;
     }
 
     /**
      * Desasignar una ruta de una solicitud
+     * Al desasignar, devuelve el contenedor a estado "disponible"
      *
      * @param idSolicitud ID de la solicitud
      * @return Solicitud actualizada sin ruta asignada
@@ -211,11 +288,17 @@ public class SolicitudService {
         solicitud.setCostoEstimado(null);
         solicitud.setTiempoEstimado(null);
 
-        // Volver el estado a borrador si estaba programada
-        if (solicitud.getEstadoSolicitud() != null &&
-            "programada".equalsIgnoreCase(solicitud.getEstadoSolicitud().getNombre())) {
-            Estado estadoBorrador = estadoService.obtenerOCrearPorNombre("borrador");
-            solicitud.setEstadoSolicitud(estadoBorrador);
+        // ⭐ REFACTORIZADO: Volver el estado a "disponible" (ID=1)
+        Estado estadoDisponible = estadoService.obtenerEstadoDisponible();
+        solicitud.setEstadoSolicitud(estadoDisponible);
+        log.info("🔄 Solicitud {} devuelta a estado: disponible (ID=1)", idSolicitud);
+
+        // ⭐ NUEVO: Volver el contenedor a estado "disponible"
+        if (solicitud.getContenedor() != null) {
+            contenedorService.cambiarEstadoDisponible(solicitud.getContenedor().getIdContenedor());
+            log.info("📦 Contenedor {} devuelto a estado: {}",
+                    solicitud.getContenedor().getIdContenedor(),
+                    EstadoContenedor.DISPONIBLE);
         }
 
         return repo.save(solicitud);
@@ -260,12 +343,13 @@ public class SolicitudService {
 
     /**
      * 🏁 Finaliza una solicitud y calcula el costo final real
+     * Cambia el estado de la solicitud a "completada" y el contenedor a "entregado"
      *
      * Requerimiento: "Al finalizar registrar el cálculo de tiempo real y el cálculo de costo real en la solicitud."
      *
      * Suma todos los costos reales de los tramos de la ruta asociada.
      * Actualiza costoFinal y tiempoReal en la solicitud.
-     * Cambia el estado a "entregada".
+     * Cambia el estado a "completada".
      *
      * @param idSolicitud ID de la solicitud a finalizar
      * @return Solicitud finalizada with costos reales
@@ -325,14 +409,23 @@ public class SolicitudService {
             solicitud.setTiempoReal((int) horasReales);
         }
 
-        // 7. Actualizar estado a "entregada"
-        Estado estadoEntregada = estadoService.obtenerOCrearPorNombre("entregada");
-        solicitud.setEstadoSolicitud(estadoEntregada);
+        // 7. ⭐ REFACTORIZADO: Actualizar estado a "completada" (ID=3)
+        Estado estadoCompletada = estadoService.obtenerEstadoCompletada();
+        solicitud.setEstadoSolicitud(estadoCompletada);
+        log.info("🔄 Solicitud {} cambiada a estado: completada (ID=3)", idSolicitud);
 
-        // 8. Guardar la solicitud actualizada
+        // 8. ⭐ NUEVO: Cambiar estado del contenedor a "entregado"
+        if (solicitud.getContenedor() != null) {
+            contenedorService.cambiarEstadoEntregado(solicitud.getContenedor().getIdContenedor());
+            log.info("📦 Contenedor {} cambiado a estado: {}",
+                    solicitud.getContenedor().getIdContenedor(),
+                    EstadoContenedor.ENTREGADO);
+        }
+
+        // 9. Guardar la solicitud actualizada
         Solicitud solicitudFinalizada = repo.save(solicitud);
 
-        log.info("✅ Solicitud finalizada. Costo final: ${}, Tiempo real: {} horas",
+        log.info("✅ Solicitud completada. Costo final: ${}, Tiempo real: {} horas",
                 costoFinal, solicitud.getTiempoReal());
         log.info("📊 Diferencia con estimado: ${} (Estimado: ${}, Real: ${})",
                 solicitud.getCostoEstimado() != null
@@ -379,5 +472,23 @@ public class SolicitudService {
         }
 
         return resumen;
+    }
+
+
+
+    /**
+     * ⭐ REFACTORIZADO: Cambia el estado de la solicitud a "en proceso" (ID=2)
+     * Se llama cuando se inicia el primer tramo de la ruta
+     */
+    @Transactional
+    public void cambiarEstadoEnProceso(Long idSolicitud) {
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        Estado estadoEnProceso = estadoService.obtenerEstadoEnProceso();
+        solicitud.setEstadoSolicitud(estadoEnProceso);
+        repo.save(solicitud);
+
+        log.info("✅ Solicitud {} cambiada a estado: en proceso (ID=2)", idSolicitud);
     }
 }

@@ -1,0 +1,268 @@
+### ========================================
+### 🚀 PRUEBAS: Rutas Tentativas con OSRM
+### ⚠️ SIN AUTENTICACIÓN (Keycloak desactivado)
+### ========================================
+
+### Variables (ajustar según tu entorno)
+@baseUrl = http://localhost:8095
+
+### ========================================
+### 1️⃣ GENERAR RUTAS TENTATIVAS
+### ========================================
+
+### Ejemplo 1: Córdoba → Buenos Aires
+POST {{baseUrl}}/api/rutas/tentativas
+Content-Type: application/json
+
+{
+  "latitudOrigen": -31.4201,
+  "longitudOrigen": -64.1888,
+  "latitudDestino": -34.6037,
+  "longitudDestino": -58.3816
+}
+
+### Ejemplo 2: Mendoza → Rosario
+POST {{baseUrl}}/api/rutas/tentativas
+Content-Type: application/json
+
+{
+  "latitudOrigen": -32.8895,
+  "longitudOrigen": -68.8458,
+  "latitudDestino": -32.9442,
+  "longitudDestino": -60.6505
+}
+
+### Ejemplo 3: Salta → Mar del Plata
+POST {{baseUrl}}/api/rutas/tentativas
+Content-Type: application/json
+
+{
+  "latitudOrigen": -24.7821,
+  "longitudOrigen": -65.4232,
+  "latitudDestino": -38.0055,
+  "longitudDestino": -57.5426
+}
+
+### Ejemplo 4: Tucumán → La Plata
+POST {{baseUrl}}/api/rutas/tentativas
+Content-Type: application/json
+
+{
+  "latitudOrigen": -26.8083,
+  "longitudOrigen": -65.2176,
+  "latitudDestino": -34.9205,
+  "longitudDestino": -57.9536
+}
+
+### ========================================
+### 2️⃣ CREAR RUTA DEFINITIVA (Ruta Directa)
+### ========================================
+
+POST {{baseUrl}}/api/rutas/crear-desde-tentativa
+Content-Type: application/json
+
+{
+  "idSolicitud": 1,
+  "tipoRuta": "DIRECTA",
+  "latitudOrigen": -31.4201,
+  "longitudOrigen": -64.1888,
+  "latitudDestino": -34.6037,
+  "longitudDestino": -58.3816,
+  "tramos": [
+    {
+      "orden": 1,
+      "tipoTramo": "directo",
+      "latitudOrigen": -31.4201,
+      "longitudOrigen": -64.1888,
+      "nombreOrigen": "Punto de origen",
+      "idDepositoOrigen": null,
+      "latitudDestino": -34.6037,
+      "longitudDestino": -58.3816,
+      "nombreDestino": "Punto de destino",
+      "idDepositoDestino": null,
+      "distanciaKm": 715.5,
+      "duracionMinutos": 540.2,
+      "costoAproximado": 169465.00,
+      "costoEstadiaDiario": null
+    }
+  ]
+}
+
+### ========================================
+### 3️⃣ CREAR RUTA DEFINITIVA (Con 1 Depósito)
+### ========================================
+
+POST {{baseUrl}}/api/rutas/crear-desde-tentativa
+Content-Type: application/json
+
+{
+  "idSolicitud": 2,
+  "tipoRuta": "CON_1_DEPOSITO",
+  "latitudOrigen": -31.4201,
+  "longitudOrigen": -64.1888,
+  "latitudDestino": -34.6037,
+  "longitudDestino": -58.3816,
+  "tramos": [
+    {
+      "orden": 1,
+      "tipoTramo": "a_deposito",
+      "latitudOrigen": -31.4201,
+      "longitudOrigen": -64.1888,
+      "nombreOrigen": "Punto de origen",
+      "idDepositoOrigen": null,
+      "latitudDestino": -31.6107,
+      "longitudDestino": -60.6973,
+      "nombreDestino": "Centro Logístico Santa Fe",
+      "idDepositoDestino": 40,
+      "distanciaKm": 345.8,
+      "duracionMinutos": 260.5,
+      "costoAproximado": 84534.00,
+      "costoEstadiaDiario": 3500.00
+    },
+    {
+      "orden": 2,
+      "tipoTramo": "desde_deposito",
+      "latitudOrigen": -31.6107,
+      "longitudOrigen": -60.6973,
+      "nombreOrigen": "Centro Logístico Santa Fe",
+      "idDepositoOrigen": 40,
+      "latitudDestino": -34.6037,
+      "longitudDestino": -58.3816,
+      "nombreDestino": "Punto de destino",
+      "idDepositoDestino": null,
+      "distanciaKm": 385.2,
+      "duracionMinutos": 290.8,
+      "costoAproximado": 93596.00,
+      "costoEstadiaDiario": null
+    }
+  ]
+}
+
+### ========================================
+### 4️⃣ VERIFICAR RUTA CREADA
+### ========================================
+
+### Obtener ruta por ID (cambiar {id} por el ID de la ruta creada)
+GET {{baseUrl}}/api/rutas/5
+
+### Obtener tramos de la ruta
+GET {{baseUrl}}/api/rutas/5/tramos
+
+### ========================================
+### 5️⃣ ENDPOINTS AUXILIARES
+### ========================================
+
+### Obtener todas las rutas
+GET {{baseUrl}}/api/rutas
+
+### Obtener resumen de una ruta
+GET {{baseUrl}}/api/rutas/5/resumen
+
+### Obtener todas las rutas tentativas (rutas existentes en BD)
+GET {{baseUrl}}/api/rutas/tentativas
+
+### ========================================
+### 📝 NOTAS DE USO
+### ========================================
+
+# 1. Primero ejecuta "GENERAR RUTAS TENTATIVAS" para obtener las 3 opciones
+# 2. Copia el JSON de la ruta que quieres crear (rutaDirecta, rutaCon1Deposito o rutaCon2Depositos)
+# 3. Pega ese JSON en el campo "tramos" de "CREAR RUTA DEFINITIVA"
+# 4. Ajusta el idSolicitud según tu caso
+# 5. Ejecuta y obtendrás una ruta creada en la BD con su ID
+
+### ========================================
+### 🌍 COORDENADAS DE EJEMPLO (Argentina)
+### ========================================
+
+# Ciudad Autónoma de Buenos Aires: -34.6037, -58.3816
+# Córdoba: -31.4201, -64.1888
+# Rosario: -32.9442, -60.6505
+# Mendoza: -32.8895, -68.8458
+# La Plata: -34.9205, -57.9536
+# Mar del Plata: -38.0055, -57.5426
+# San Miguel de Tucumán: -26.8083, -65.2176
+# Salta: -24.7821, -65.4232
+# Santa Fe: -31.6107, -60.6973
+# San Juan: -31.5375, -68.5364
+# Paraná: -31.7326, -60.5290
+# Neuquén: -38.9516, -68.0591
+# Posadas: -27.3621, -55.9008
+# Resistencia: -27.4514, -58.9867
+# Corrientes: -27.4692, -58.8306
+
+### ========================================
+### 🧪 PRUEBA COMPLETA PASO A PASO
+### ========================================
+
+### Paso 1: Generar rutas tentativas Mendoza → Rosario
+POST {{baseUrl}}/api/rutas/tentativas
+Content-Type: application/json
+
+{
+  "latitudOrigen": -32.8895,
+  "longitudOrigen": -68.8458,
+  "latitudDestino": -32.9442,
+  "longitudDestino": -60.6505
+}
+
+### Paso 2: (Después de analizar la respuesta) Crear ruta con 1 depósito
+# NOTA: Usar los valores exactos que devolvió el paso 1
+POST {{baseUrl}}/api/rutas/crear-desde-tentativa
+Content-Type: application/json
+
+{
+  "idSolicitud": 10,
+  "tipoRuta": "CON_1_DEPOSITO",
+  "latitudOrigen": -32.8895,
+  "longitudOrigen": -68.8458,
+  "latitudDestino": -32.9442,
+  "longitudDestino": -60.6505,
+  "tramos": [
+    {
+      "orden": 1,
+      "tipoTramo": "a_deposito",
+      "latitudOrigen": -32.8895,
+      "longitudOrigen": -68.8458,
+      "nombreOrigen": "Punto de origen",
+      "idDepositoOrigen": null,
+      "latitudDestino": -31.5375,
+      "longitudDestino": -68.5364,
+      "nombreDestino": "Centro Logístico San Juan",
+      "idDepositoDestino": 34,
+      "distanciaKm": 165.3,
+      "duracionMinutos": 120.5,
+      "costoAproximado": 43019.00,
+      "costoEstadiaDiario": 3100.00
+    },
+    {
+      "orden": 2,
+      "tipoTramo": "desde_deposito",
+      "latitudOrigen": -31.5375,
+      "longitudOrigen": -68.5364,
+      "nombreOrigen": "Centro Logístico San Juan",
+      "idDepositoOrigen": 34,
+      "latitudDestino": -32.9442,
+      "longitudDestino": -60.6505,
+      "nombreDestino": "Punto de destino",
+      "idDepositoDestino": null,
+      "distanciaKm": 782.1,
+      "duracionMinutos": 588.3,
+      "costoAproximado": 184883.00,
+      "costoEstadiaDiario": null
+    }
+  ]
+}
+
+### Paso 3: Verificar que la ruta se creó correctamente
+GET {{baseUrl}}/api/rutas/11
+
+### Paso 4: Asignar ruta a una solicitud (en ms-Solicitudes)
+PUT http://localhost:8090/api/solicitudes/10/asignar-ruta
+Content-Type: application/json
+
+{
+  "idRuta": 11,
+  "costoEstimado": 227902.00,
+  "tiempoEstimado": 709
+}

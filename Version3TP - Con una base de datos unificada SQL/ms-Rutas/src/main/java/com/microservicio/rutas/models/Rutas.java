@@ -21,6 +21,9 @@ public class Rutas {
     @Column(name = "id_ruta")
     private Long idRuta;
 
+    @Column(name = "id_solicitud")
+    private Long idSolicitud; // FK lógica hacia el microservicio de Solicitudes
+
     @Column(name = "cantidad_tramos")
     private Integer cantidadTramos;
 
