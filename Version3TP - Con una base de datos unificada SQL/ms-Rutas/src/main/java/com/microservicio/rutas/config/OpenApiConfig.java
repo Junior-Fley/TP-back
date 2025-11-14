@@ -14,9 +14,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("API Solicitudes")
+                        .title("API Rutas")
                         .version("1.0")
-                        .description("Documentación del microservicio de Solicitudes"))
+                        .description("Documentación del microservicio de rutas"))
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
                 .components(new io.swagger.v3.oas.models.Components()
                         .addSecuritySchemes("BearerAuth",
