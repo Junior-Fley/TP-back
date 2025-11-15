@@ -1,0 +1,203 @@
+### ========================================
+### 🚚 ENDPOINTS PARA CREAR Y GESTIONAR CAMIONES
+### ========================================
+
+### ============================================
+### PASO 1: CREAR CAMIÓN (Simplificado) ⭐ NUEVO
+### ============================================
+### Solo requiere: patente, capacidadPeso, capacidadVolumen, costoBaseKm, consumoCombustibleKm
+### Genera automáticamente:
+### - Teléfono: 351XXXXXXX (random)
+### - Disponibilidad: true
+### - Transportista: null (sin asignar)
+
+POST http://localhost:8085/api/camiones/crear
+Content-Type: application/json
+
+{
+  "patente": "ABC123",
+  "capacidadPeso": 15000,
+  "capacidadVolumen": 50,
+  "costoBaseKm": 150,
+  "consumoCombustibleKm": 0.35
+}
+
+### ✅ RESPUESTA ESPERADA:
+### {
+###   "idCamion": 1,
+###   "patente": "ABC123",
+###   "telefono": "3517654321",  ← ⚠️ Generado automáticamente
+###   "capacidadPeso": 15000.0,
+###   "capacidadVolumen": 50.0,
+###   "disponibilidad": true,      ← ⚠️ Por defecto true
+###   "costoBaseKm": 150.0,
+###   "consumoCombustibleKm": 0.35,
+###   "transportista": null        ← ⚠️ Sin asignar inicialmente
+### }
+
+###
+
+### ============================================
+### PASO 2: ASIGNAR TRANSPORTISTA AL CAMIÓN ⭐ NUEVO
+### ============================================
+### Requiere: idTransportista en el body
+### ⚠️ Cambia {idCamion} por el ID del camión creado (ej: 1)
+
+PUT http://localhost:8085/api/camiones/1/asignar-transportista
+Content-Type: application/json
+
+{
+  "idTransportista": 1
+}
+
+### ✅ RESPUESTA ESPERADA:
+### {
+###   "idCamion": 1,
+###   "patente": "ABC123",
+###   "telefono": "3517654321",
+###   "capacidadPeso": 15000.0,
+###   "capacidadVolumen": 50.0,
+###   "disponibilidad": true,
+###   "costoBaseKm": 150.0,
+###   "consumoCombustibleKm": 0.35,
+###   "transportista": {           ← ⚠️ Ahora tiene transportista asignado
+###     "idTransportista": 1,
+###     "nombre": "Juan",
+###     "apellido": "Pérez",
+###     "dni": "12345678",
+###     "telefono": "3511234567",
+###     "mail": "juan@example.com",
+###     "direccion": "Calle Falsa 123"
+###   }
+### }
+
+###
+
+### ============================================
+### PASO 3: VERIFICAR EL CAMIÓN CREADO
+### ============================================
+
+### Ver todos los camiones
+GET http://localhost:8085/api/camiones
+
+### Ver un camión específico
+GET http://localhost:8085/api/camiones/1
+
+###
+
+### ============================================
+### 📋 OTROS EJEMPLOS: CREAR MÁS CAMIONES
+### ============================================
+
+### Camión mediano
+POST http://localhost:8085/api/camiones/crear
+Content-Type: application/json
+
+{
+  "patente": "DEF456",
+  "capacidadPeso": 10000,
+  "capacidadVolumen": 35,
+  "costoBaseKm": 120,
+  "consumoCombustibleKm": 0.28
+}
+
+###
+
+### Camión grande
+POST http://localhost:8085/api/camiones/crear
+Content-Type: application/json
+
+{
+  "patente": "GHI789",
+  "capacidadPeso": 25000,
+  "capacidadVolumen": 80,
+  "costoBaseKm": 200,
+  "consumoCombustibleKm": 0.45
+}
+
+###
+
+### ============================================
+### ⚠️ CASOS DE ERROR
+### ============================================
+
+### Error: Patente duplicada
+POST http://localhost:8085/api/camiones/crear
+Content-Type: application/json
+
+{
+  "patente": "ABC123",
+  "capacidadPeso": 15000,
+  "capacidadVolumen": 50,
+  "costoBaseKm": 150,
+  "consumoCombustibleKm": 0.35
+}
+
+### Respuesta esperada:
+### Status: 400 Bad Request
+### Body: "Error: Ya existe un camión con la patente: ABC123"
+
+###
+
+### Error: Transportista no existe
+PUT http://localhost:8085/api/camiones/1/asignar-transportista
+Content-Type: application/json
+
+{
+  "idTransportista": 999
+}
+
+### Respuesta esperada:
+### Status: 404 Not Found
+### Body: "Error: Transportista no encontrado con ID: 999"
+
+###
+
+### Error: Camión no existe
+PUT http://localhost:8085/api/camiones/999/asignar-transportista
+Content-Type: application/json
+
+{
+  "idTransportista": 1
+}
+
+### Respuesta esperada:
+### Status: 404 Not Found
+### Body: "Error: Camión no encontrado con ID: 999"
+
+###
+
+### ============================================
+### 📝 NOTAS IMPORTANTES
+### ============================================
+#
+# ✅ VENTAJAS DEL NUEVO ENDPOINT /crear:
+# 1. Solo requiere 5 campos (antes requería 8)
+# 2. Teléfono generado automáticamente (351 + 7 dígitos random)
+# 3. Disponibilidad siempre true por defecto
+# 4. No necesitas crear el transportista primero
+# 5. Validación automática de patente duplicada
+#
+# 🔄 FLUJO RECOMENDADO:
+# 1. POST /api/camiones/crear → Crea el camión
+# 2. (Opcional) PUT /api/camiones/{id}/asignar-transportista → Asigna transportista
+# 3. GET /api/camiones → Verifica que se creó correctamente
+#
+# 📊 ENDPOINT ANTERIOR (SIGUE FUNCIONANDO):
+# POST /api/camiones
+# Body: Requiere el objeto Camion completo con transportista
+#
+# ⭐ DIFERENCIAS:
+# - /api/camiones → Requiere todo (incluido transportista)
+# - /api/camiones/crear → Solo requiere datos básicos del camión
+# - /api/camiones/{id}/asignar-transportista → Asigna transportista después
+#
+# 💡 LOGS EN CONSOLA:
+# Cuando ejecutes los endpoints, verás logs como:
+#
+# 🚚 Creando nuevo camión con patente: ABC123
+# ✅ Camión creado exitosamente - ID: 1, Patente: ABC123, Teléfono: 3517654321
+# 👤 Asignando transportista 1 al camión 1
+# ✅ Transportista Juan Pérez asignado al camión ABC123
+#
+

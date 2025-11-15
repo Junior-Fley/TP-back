@@ -10,6 +10,7 @@ import com.microservicio.solicitudes.dtos.EstadoContenedorDTO;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
 import com.microservicio.solicitudes.dtos.TramoDTO;
+import com.microservicio.solicitudes.dtos.UbicacionDTO;
 import com.microservicio.solicitudes.models.Cliente;
 import com.microservicio.solicitudes.models.Estado;
 import com.microservicio.solicitudes.models.Solicitud;
@@ -314,33 +315,112 @@ public class SolicitudService {
      * @return Lista de contenedores pendientes con su información completa
      */
     public List<ContenedorPendienteDTO> obtenerContenedoresPendientes() {
+        log.info("📦 Consultando contenedores pendientes de entrega");
 
         // Obtener todas las solicitudes
         List<Solicitud> solicitudes = repo.findAll();
 
-        // Filtrar solo contenedores con estado "Pendiente de entrega"
+        // Filtrar solo contenedores con estado "Pendiente de entrega" o "En tránsito"
         return solicitudes.stream()
-                // Filtrar solo los contenedores con estado "Pendiente de entrega"
+                // Filtrar solo los contenedores pendientes o en tránsito
                 .filter(s -> s.getContenedor() != null &&
                             s.getContenedor().getEstado() != null &&
-                            "Pendiente de entrega".equalsIgnoreCase(s.getContenedor().getEstado()))
-                // Mapear a DTO
-                .map(s -> new ContenedorPendienteDTO(
-                        s.getContenedor().getIdContenedor(),
-                        s.getNumeroSolicitud(),
-                        s.getContenedor().getEstado(),
-                        s.getEstadoSolicitud() != null ? s.getEstadoSolicitud().getNombre() : "Sin estado",
-                        s.getIdRuta(),
-                        s.getCliente() != null ? s.getCliente().getNombre() + " " + s.getCliente().getApellido() : "Sin cliente",
-                        s.getCliente() != null ? s.getCliente().getDni() : null,
-                        s.getContenedor().getPeso(),
-                        s.getContenedor().getVolumen(),
-                        s.getCostoEstimado(),
-                        s.getTiempoEstimado()
-                ))
+                            ("Pendiente de entrega".equalsIgnoreCase(s.getContenedor().getEstado()) ||
+                             "En tránsito".equalsIgnoreCase(s.getContenedor().getEstado())))
+                // Mapear a DTO con información de ubicación
+                .map(s -> {
+                    ContenedorPendienteDTO dto = new ContenedorPendienteDTO();
+
+                    // Información básica
+                    dto.setIdContenedor(s.getContenedor().getIdContenedor());
+                    dto.setNumeroSolicitud(s.getNumeroSolicitud());
+                    dto.setEstadoContenedor(s.getContenedor().getEstado());
+                    dto.setEstadoSolicitud(s.getEstadoSolicitud() != null ? s.getEstadoSolicitud().getNombre() : "Sin estado");
+                    dto.setIdRuta(s.getIdRuta());
+                    dto.setNombreCliente(s.getCliente() != null ? s.getCliente().getNombre() + " " + s.getCliente().getApellido() : "Sin cliente");
+                    dto.setDniCliente(s.getCliente() != null ? s.getCliente().getDni() : null);
+                    dto.setPeso(s.getContenedor().getPeso());
+                    dto.setVolumen(s.getContenedor().getVolumen());
+                    dto.setCostoEstimado(s.getCostoEstimado());
+                    dto.setTiempoEstimado(s.getTiempoEstimado());
+
+                    // ⭐ NUEVO: Obtener información de ubicación desde los tramos
+                    if (s.getIdRuta() != null) {
+                        try {
+                            List<TramoDTO> tramos = rutasApiClient.obtenerTramosPorRuta(s.getIdRuta());
+                            if (tramos != null && !tramos.isEmpty()) {
+                                // Calcular progreso
+                                dto.setCantidadTramos(tramos.size());
+                                long tramosFinalizados = tramos.stream()
+                                        .filter(t -> "finalizado".equalsIgnoreCase(t.getEstado()))
+                                        .count();
+                                dto.setTramosCompletados((int) tramosFinalizados);
+                                dto.setPorcentajeAvance((tramosFinalizados * 100.0) / tramos.size());
+
+                                // Determinar ubicación actual
+                                UbicacionDTO ubicacion = determinarUbicacionActual(tramos);
+                                dto.setUbicacionActual(ubicacion);
+
+                                log.debug("📍 Contenedor {} - Ubicación: {}",
+                                        dto.getIdContenedor(),
+                                        ubicacion != null ? ubicacion.getDescripcion() : "Desconocida");
+                            }
+                        } catch (Exception e) {
+                            log.warn("⚠️ No se pudo obtener ubicación del contenedor {}: {}",
+                                    dto.getIdContenedor(), e.getMessage());
+                        }
+                    }
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
+    /**
+     * ⭐ NUEVO: Determina la ubicación actual del contenedor basándose en el estado de los tramos
+     */
+    private UbicacionDTO determinarUbicacionActual(List<TramoDTO> tramos) {
+        if (tramos == null || tramos.isEmpty()) {
+            return null;
+        }
+
+        // Buscar el tramo actualmente en curso (iniciado pero no finalizado)
+        TramoDTO tramoEnCurso = tramos.stream()
+                .filter(t -> "iniciado".equalsIgnoreCase(t.getEstado()))
+                .findFirst()
+                .orElse(null);
+
+        if (tramoEnCurso != null) {
+            // El contenedor está en tránsito
+            UbicacionDTO ubicacion = new UbicacionDTO();
+            ubicacion.setDescripcion("En tránsito");
+            ubicacion.setEstadoTramoActual("iniciado");
+            ubicacion.setIdTramoActual(tramoEnCurso.getIdTramo());
+            return ubicacion;
+        }
+
+        // Buscar el último tramo finalizado
+        TramoDTO ultimoFinalizado = tramos.stream()
+                .filter(t -> "finalizado".equalsIgnoreCase(t.getEstado()))
+                .reduce((first, second) -> second) // Obtener el último
+                .orElse(null);
+
+        if (ultimoFinalizado != null) {
+            // El contenedor está en el depósito destino del último tramo finalizado
+            UbicacionDTO ubicacion = new UbicacionDTO();
+            ubicacion.setDescripcion("En depósito (esperando siguiente tramo)");
+            ubicacion.setEstadoTramoActual("esperando");
+            ubicacion.setIdTramoActual(ultimoFinalizado.getIdTramo());
+            return ubicacion;
+        }
+
+        // Ningún tramo iniciado aún - está en el origen
+        UbicacionDTO ubicacion = new UbicacionDTO();
+        ubicacion.setDescripcion("En origen (esperando inicio de transporte)");
+        ubicacion.setEstadoTramoActual("pendiente");
+        ubicacion.setIdTramoActual(tramos.get(0).getIdTramo());
+        return ubicacion;
+    }
     /**
      * 🏁 Finaliza una solicitud y calcula el costo final real
      * Cambia el estado de la solicitud a "completada" y el contenedor a "entregado"

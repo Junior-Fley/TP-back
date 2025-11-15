@@ -1,5 +1,6 @@
 package com.microservicio.rutas.clients;
 
+import com.microservicio.rutas.dtos.ContenedorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -9,6 +10,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.math.BigDecimal;
+import java.util.Map;
 
 /**
  * Cliente para comunicación con el microservicio de Solicitudes
@@ -79,6 +83,79 @@ public class SolicitudesApiClient {
         } catch (Exception e) {
             log.warn("⚠️ No se pudo finalizar automáticamente la Solicitud {}: {}",
                     idSolicitud, e.getMessage());
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Actualiza el costo acumulado de la solicitud cada vez que se finaliza un tramo
+     * Esto permite ver el costo progresivo mientras se van finalizando los tramos
+     */
+    public void actualizarCostoAcumulado(Long idSolicitud, BigDecimal costoTramo) {
+        try {
+            String url = solicitudesBaseUrl + "/api/solicitudes/" + idSolicitud + "/costo-acumulado";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<BigDecimal> request = new HttpEntity<>(costoTramo, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.PUT,
+                request,
+                String.class
+            );
+
+            log.info("✅ Costo acumulado actualizado para Solicitud {}: {}",
+                    idSolicitud, response.getBody());
+        } catch (Exception e) {
+            log.warn("⚠️ No se pudo actualizar el costo acumulado para Solicitud {}: {}",
+                    idSolicitud, e.getMessage());
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Obtiene el contenedor asociado a una solicitud
+     * Necesario para validar que el camión puede transportar el contenedor
+     */
+    public ContenedorDTO obtenerContenedorPorSolicitud(Long idSolicitud) {
+        try {
+            String url = solicitudesBaseUrl + "/api/solicitudes/" + idSolicitud;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                request,
+                Map.class
+            );
+
+            if (response.getBody() != null && response.getBody().get("contenedor") != null) {
+                Map<String, Object> contenedorMap = (Map<String, Object>) response.getBody().get("contenedor");
+
+                ContenedorDTO contenedor = new ContenedorDTO();
+                contenedor.setIdContenedor(((Number) contenedorMap.get("idContenedor")).longValue());
+                contenedor.setPeso((Double) contenedorMap.get("peso"));
+                contenedor.setVolumen((Double) contenedorMap.get("volumen"));
+                contenedor.setEstado((String) contenedorMap.get("estado"));
+
+                log.info("✅ Contenedor obtenido: ID={}, Peso={}kg, Volumen={}m³",
+                        contenedor.getIdContenedor(), contenedor.getPeso(), contenedor.getVolumen());
+
+                return contenedor;
+            }
+
+            log.warn("⚠️ No se encontró contenedor para la Solicitud {}", idSolicitud);
+            return null;
+
+        } catch (Exception e) {
+            log.warn("⚠️ No se pudo obtener contenedor para Solicitud {}: {}",
+                    idSolicitud, e.getMessage());
+            return null;
         }
     }
 }

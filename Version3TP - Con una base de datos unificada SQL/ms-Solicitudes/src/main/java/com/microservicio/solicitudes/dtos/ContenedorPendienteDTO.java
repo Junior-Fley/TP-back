@@ -21,4 +21,12 @@ public class ContenedorPendienteDTO {
     private Double volumen;
     private BigDecimal costoEstimado;
     private Integer tiempoEstimado;
+
+    // ⭐ NUEVO: Información de ubicación
+    private UbicacionDTO ubicacionActual;
+    private String ciudadOrigen;
+    private String ciudadDestino;
+    private Integer cantidadTramos;
+    private Integer tramosCompletados;
+    private Double porcentajeAvance;
 }

@@ -1,0 +1,247 @@
+# Ejemplos de Uso: Crear Solicitud Completa
+
+## ⚠️ ACLARACIÓN IMPORTANTE: ESTADOS
+
+### Estados de la SOLICITUD (automáticos):
+- **disponible** (ID=1) - Se asigna automáticamente al crear
+- **en proceso** (ID=2) - Se asigna al asignar una ruta
+- **completada** (ID=3) - Se asigna al finalizar todos los tramos
+
+### Estados del CONTENEDOR (automáticos):
+- **Disponible** - Al crear el contenedor
+- **Pendiente de entrega** - Al asignar ruta a la solicitud
+- **En tránsito** - Al iniciar el primer tramo
+- **Entregado** - Al finalizar todos los tramos
+
+**⚠️ NOTA**: El campo `estadoInicial` en el DTO está DEPRECADO y no se usa.
+El estado siempre se asigna automáticamente como "disponible".
+
+---
+
+## ✅ Ejemplo 1: Solicitud completa básica (cliente nuevo)
+
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 15000.0,
+  "volumenContenedor": 30.0,
+  "nombreCliente": "Juan",
+  "apellidoCliente": "Pérez",
+  "dniCliente": "12345678",
+  "telefonoCliente": "3514567890",
+  "mailCliente": "juan.perez@email.com",
+  "direccionCliente": "Av. Colón 1234, Córdoba"
+}
+
+### Response esperado: 201 Created
+```json
+{
+  "numeroSolicitud": 1,
+  "contenedor": {
+    "idContenedor": 1,
+    "peso": 15000.0,
+    "volumen": 30.0,
+    "estado": "Disponible"
+  },
+  "cliente": {
+    "idCliente": 1,
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "dni": "12345678",
+    "telefono": "3514567890",
+    "mail": "juan.perez@email.com",
+    "direccion": "Av. Colón 1234, Córdoba"
+  },
+  "estadoSolicitud": {
+    "idEstado": 1,
+    "nombre": "disponible"
+  },
+  "idRuta": null,
+  "costoEstimado": null,
+  "tiempoEstimado": null,
+  "costoFinal": null,
+  "tiempoReal": null
+}
+```
+
+---
+
+## ✅ Ejemplo 2: Cliente existente (mismo DNI)
+
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 20000.0,
+  "volumenContenedor": 40.0,
+  "nombreCliente": "Juan",
+  "apellidoCliente": "Pérez",
+  "dniCliente": "12345678",
+  "telefonoCliente": "3514567890",
+  "mailCliente": "juan.perez@email.com",
+  "direccionCliente": "Av. Colón 1234, Córdoba"
+}
+
+### Response: 201 Created
+# El cliente NO se duplica, se reutiliza el existente con DNI 12345678
+# Solo se crea un nuevo contenedor y solicitud
+
+---
+
+## ✅ Ejemplo 3: Contenedor grande
+
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 25000.0,
+  "volumenContenedor": 50.0,
+  "nombreCliente": "María",
+  "apellidoCliente": "González",
+  "dniCliente": "87654321",
+  "telefonoCliente": "3515678901",
+  "mailCliente": "maria.gonzalez@email.com",
+  "direccionCliente": "San Martín 567, Buenos Aires"
+}
+
+---
+
+## ✅ Ejemplo 4: Contenedor mediano
+
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 10000.0,
+  "volumenContenedor": 20.0,
+  "nombreCliente": "Carlos",
+  "apellidoCliente": "Rodríguez",
+  "dniCliente": "11223344",
+  "telefonoCliente": "3516789012",
+  "mailCliente": "carlos.rodriguez@email.com",
+  "direccionCliente": "Belgrano 890, Rosario"
+}
+
+---
+
+## ✅ Ejemplo 5: Contenedor pequeño
+
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 5000.0,
+  "volumenContenedor": 10.0,
+  "nombreCliente": "Ana",
+  "apellidoCliente": "Martínez",
+  "dniCliente": "55667788",
+  "telefonoCliente": "3517890123",
+  "mailCliente": "ana.martinez@email.com",
+  "direccionCliente": "Rivadavia 234, Mendoza"
+}
+
+---
+
+## ❌ Ejemplo 6: Error - Datos incompletos
+
+POST http://localhost:8090/api/solicitudes/completa
+Content-Type: application/json
+
+{
+  "pesoContenedor": 15000.0,
+  "nombreCliente": "Pedro"
+}
+
+### Response esperado: 400 Bad Request
+# Faltan campos requeridos
+
+---
+
+## 📊 Tabla de Referencia: Tamaños de Contenedores
+
+| Tipo | Peso (kg) | Volumen (m³) | Descripción |
+|------|-----------|--------------|-------------|
+| Pequeño | 5,000 - 10,000 | 10 - 20 | Cargas ligeras |
+| Mediano | 10,000 - 20,000 | 20 - 40 | Carga estándar |
+| Grande | 20,000 - 30,000 | 40 - 60 | Carga pesada |
+| Muy Grande | 30,000+ | 60+ | Carga industrial |
+
+---
+
+## 🔄 Flujo Completo: Estados y Transiciones
+
+```
+1. CREAR SOLICITUD
+   POST /api/solicitudes/completa
+   ↓
+   Estado Solicitud: "disponible"
+   Estado Contenedor: "Disponible"
+
+2. ASIGNAR RUTA
+   PUT /api/solicitudes/{id}/asignar-ruta
+   ↓
+   Estado Solicitud: "en proceso"
+   Estado Contenedor: "Pendiente de entrega"
+
+3. INICIAR PRIMER TRAMO
+   POST /api/tramos/{id}/iniciar
+   ↓
+   Estado Solicitud: "en proceso"
+   Estado Contenedor: "En tránsito"
+
+4. FINALIZAR ÚLTIMO TRAMO
+   POST /api/tramos/{id}/finalizar
+   ↓
+   Estado Solicitud: "completada" (automático)
+   Estado Contenedor: "Entregado" (automático)
+```
+
+---
+
+## 🔑 Autenticación
+
+Este endpoint requiere rol de **CLIENTE**.
+
+### Con Keycloak activo:
+```http
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Con Keycloak desactivado:
+No requiere token, acceso directo.
+
+---
+
+## ⚠️ Validaciones Automáticas
+
+1. ✅ DNI único por cliente (reutiliza si existe)
+2. ✅ Contenedor creado con estado "Disponible"
+3. ✅ Solicitud creada con estado "disponible" (ID=1) - SIEMPRE
+4. ✅ IDs generados automáticamente
+
+---
+
+## 💡 Consejos
+
+- **Usa DNIs reales o ficticios consistentes** para no duplicar clientes
+- **El peso y volumen son importantes** para validar qué camiones pueden transportar el contenedor
+- **Guarda el `numeroSolicitud`** que se retorna para operaciones posteriores
+- **El `idContenedor`** también es importante para consultar el estado
+- **NO uses el campo `estadoInicial`** - está deprecado y se ignora
+
+---
+
+## 🚀 Siguiente Paso
+
+Después de crear la solicitud, el flujo típico es:
+
+1. Operador/Admin consulta rutas tentativas
+2. Operador/Admin selecciona una ruta y la asigna a la solicitud
+3. Operador/Admin asigna camiones a los tramos
+4. Transportista inicia y finaliza cada tramo
+5. Sistema finaliza automáticamente cuando todos los tramos terminan
+
+---
+
+¡Listo para crear solicitudes completas! 🎉

@@ -4,6 +4,7 @@ import com.microservicio.rutas.clients.CamionesApiClient;
 import com.microservicio.rutas.clients.SolicitudesApiClient;
 import com.microservicio.rutas.clients.TarifasApiClient;
 import com.microservicio.rutas.dtos.CamionDTO;
+import com.microservicio.rutas.dtos.ContenedorDTO;
 import com.microservicio.rutas.dtos.CostoEntregaDTO;
 import com.microservicio.rutas.dtos.CostoRealDTO;
 import com.microservicio.rutas.dtos.FinalizarTramoDTO;
@@ -117,25 +118,82 @@ public class TramoService {
 
     /**
      * Asigna un camión a un tramo específico.
+     * ⭐ MEJORADO: Valida que el camión puede transportar el contenedor
      */
     public Tramo asignarCamion(Long idTramo, Long idCamion) {
+        log.info("🚛 Asignando camión {} a tramo {}", idCamion, idTramo);
+
         // 1. Verificar que el tramo existe
         Tramo tramo = repo.findById(idTramo)
                 .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + idTramo));
 
-        // 2. Verificar que el camión existe en el microservicio de Transporte
-        if (!camionesApiClient.existeCamion(idCamion)) {
+        // 2. Verificar que el camión existe y obtener sus datos
+        CamionDTO camion = camionesApiClient.obtenerCamion(idCamion);
+        if (camion == null) {
             throw new RuntimeException("Camión no encontrado con ID: " + idCamion + " en el microservicio de Transporte");
         }
+        log.info("✅ Camión encontrado: Patente={}, Capacidad Peso={}kg, Capacidad Volumen={}m³",
+                camion.getPatente(), camion.getCapacidadPeso(), camion.getCapacidadVolumen());
 
-        // 3. Asignar el camión al tramo
+        // 3. ⭐ NUEVO: Verificar que el camión está disponible
+        if (!camion.isDisponibilidad()) {
+            throw new RuntimeException("El camión " + camion.getPatente() +
+                    " no está disponible. Debe estar libre para asignarse a un tramo.");
+        }
+        log.info("✅ Camión disponible para asignación");
+
+        // 4. ⭐ NUEVO: Obtener información del contenedor de la solicitud asociada a la ruta
+        if (tramo.getRuta() != null && tramo.getRuta().getIdSolicitud() != null) {
+            ContenedorDTO contenedor = solicitudesApiClient.obtenerContenedorPorSolicitud(
+                    tramo.getRuta().getIdSolicitud());
+
+            if (contenedor != null) {
+                // 4.1 Validar capacidad de peso
+                if (contenedor.getPeso() != null && contenedor.getPeso() > camion.getCapacidadPeso()) {
+                    throw new RuntimeException(String.format(
+                            "❌ El camión %s no puede transportar el contenedor. " +
+                            "Peso del contenedor: %.2f kg > Capacidad del camión: %.2f kg",
+                            camion.getPatente(),
+                            contenedor.getPeso(),
+                            camion.getCapacidadPeso()
+                    ));
+                }
+                log.info("✅ Validación de peso: Contenedor {}kg <= Camión {}kg",
+                        contenedor.getPeso(), camion.getCapacidadPeso());
+
+                // 4.2 Validar capacidad de volumen
+                if (contenedor.getVolumen() != null && contenedor.getVolumen() > camion.getCapacidadVolumen()) {
+                    throw new RuntimeException(String.format(
+                            "❌ El camión %s no puede transportar el contenedor. " +
+                            "Volumen del contenedor: %.2f m³ > Capacidad del camión: %.2f m³",
+                            camion.getPatente(),
+                            contenedor.getVolumen(),
+                            camion.getCapacidadVolumen()
+                    ));
+                }
+                log.info("✅ Validación de volumen: Contenedor {}m³ <= Camión {}m³",
+                        contenedor.getVolumen(), camion.getCapacidadVolumen());
+
+                log.info("✅ El camión {} puede transportar el contenedor (Peso: {}kg, Volumen: {}m³)",
+                        camion.getPatente(), contenedor.getPeso(), contenedor.getVolumen());
+            } else {
+                log.warn("⚠️ No se pudo obtener información del contenedor. Se omite validación de capacidad.");
+            }
+        } else {
+            log.warn("⚠️ El tramo no tiene ruta o solicitud asociada. Se omite validación de capacidad del contenedor.");
+        }
+
+        // 5. Asignar el camión al tramo
         tramo.setIdCamion(idCamion);
 
-        // 4. Actualizar estado a "asignado"
+        // 6. Actualizar estado a "asignado"
         EstadoTramo estadoAsignado = obtenerOCrearEstado("asignado");
         tramo.setEstado(estadoAsignado);
 
-        return repo.save(tramo);
+        Tramo tramoGuardado = repo.save(tramo);
+        log.info("✅ Camión {} asignado exitosamente al tramo {}", idCamion, idTramo);
+
+        return tramoGuardado;
     }
 
     /**
