@@ -35,8 +35,15 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
-		<!-- SQLite Database -->
+		<!-- PostgreSQL Database -->
 		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- SQLite Database (DEPRECADO - ahora usamos PostgreSQL) -->
+		<!-- <dependency>
 			<groupId>org.xerial</groupId>
 			<artifactId>sqlite-jdbc</artifactId>
 			<version>3.45.0.0</version>
@@ -46,7 +53,7 @@
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-community-dialects</artifactId>
 			<version>6.4.1.Final</version>
-		</dependency>
+		</dependency> -->
 
 
 		<!-- Lombok -->

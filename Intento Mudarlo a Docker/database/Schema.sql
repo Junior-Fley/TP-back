@@ -1,122 +1,150 @@
-CREATE TABLE camion (
-                        id_camion integer,
-                        capacidad_peso float,
-                        capacidad_volumen float,
-                        marca varchar(255),
-                        modelo varchar(255),
-                        patente varchar(255),
-                        id_transportista bigint,
-                        primary key (id_camion)
-);
-
+-- =========================================
+--   TABLA CLIENTE
+-- =========================================
 CREATE TABLE cliente (
-                         id_cliente integer,
-                         apellido varchar(255),
-                         nombre varchar(255),
-                         dni varchar(255),
-                         mail varchar(255),
-                         direccion varchar(255),
-                         telefono varchar(255),
-                         primary key (id_cliente)
+                         id_cliente SERIAL PRIMARY KEY,
+                         apellido VARCHAR(255),
+                         nombre VARCHAR(255),
+                         dni VARCHAR(20),
+                         mail VARCHAR(255),
+                         direccion VARCHAR(255),
+                         telefono VARCHAR(20)
 );
 
+-- =========================================
+--   TABLA ESTADO_SOLICITUD
+-- =========================================
 CREATE TABLE estado_solicitud (
-                                  id_estado integer,
-                                  nombre varchar(255),
-                                  primary key (id_estado)
+                                  id_estado SERIAL PRIMARY KEY,
+                                  nombre VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE tarifas (
-                         id integer,
-                         activo boolean not null,
-                         descripcion varchar(255),
-                         tipo varchar(255),
-                         unidad varchar(20),
-                         valor numeric(10,2) not null,
-                         primary key (id)
+-- =========================================
+--   TABLA CONTENEDOR
+-- =========================================
+CREATE TABLE contenedor (
+                            id_contenedor SERIAL PRIMARY KEY,
+                            peso NUMERIC(10,2),
+                            volumen NUMERIC(10,2),
+                            estado VARCHAR(255)
 );
 
-CREATE TABLE "CONTENEDOR" (
-                              "id_contenedor" INTEGER,
-                              "peso" REAL,
-                              "volumen" REAL,
-                              "estado" TEXT,
-                              PRIMARY KEY("id_contenedor" AUTOINCREMENT)
-);
-
+-- =========================================
+--   TABLA SOLICITUD
+-- =========================================
 CREATE TABLE solicitud (
-                           numero_solicitud INTEGER PRIMARY KEY AUTOINCREMENT,
-                           id_cliente bigint,
-                           id_contenedor bigint,
-                           id_estado bigint,
-                           fecha varchar(255),
-                           FOREIGN KEY (id_estado) REFERENCES "estado_solicitud"(idEstado)
+                           numero_solicitud SERIAL PRIMARY KEY,
+                           id_cliente INT REFERENCES cliente(id_cliente),
+                           id_contenedor INT REFERENCES contenedor(id_contenedor),
+                           id_estado INT REFERENCES estado_solicitud(id_estado),
+                           fecha TIMESTAMP DEFAULT NOW()
 );
 
+-- =========================================
+--   TABLA CIUDAD
+-- =========================================
 CREATE TABLE ciudad (
-                        id_ciudad integer,
-                        nombre varchar(100) not null,
-                        primary key (id_ciudad)
+                        id_ciudad SERIAL PRIMARY KEY,
+                        nombre VARCHAR(100) NOT NULL
 );
 
+-- =========================================
+--   TABLA DEPOSITO
+-- =========================================
 CREATE TABLE deposito (
-                          costo_estadia_diario numeric(10,2),
-                          latitud float,
-                          longitud float,
-                          id_ciudad bigint,
-                          nombre varchar(100),
-                          id_deposito integer,
-                          direccion varchar(200),
-                          primary key (id_deposito)
+                          id_deposito SERIAL PRIMARY KEY,
+                          nombre VARCHAR(100),
+                          direccion VARCHAR(200),
+                          costo_estadia_diario NUMERIC(10,2),
+                          latitud NUMERIC(10,6),
+                          longitud NUMERIC(10,6),
+                          id_ciudad INT REFERENCES ciudad(id_ciudad)
 );
 
+-- =========================================
+--   TABLA ESTADO_TRAMO
+-- =========================================
 CREATE TABLE estado_tramo (
-                              id_estado integer,
-                              nombre varchar(50) not null,
-                              primary key (id_estado)
+                              id_estado SERIAL PRIMARY KEY,
+                              nombre VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE ruta (
-                      cantidad_depositos integer,
-                      cantidad_tramos integer,
-                      costo_total float,
-                      distancia_total_km float,
-                      tiempo_estimado_min float,
-                      id_ruta integer,
-                      primary key (id_ruta)
-);
-
+-- =========================================
+--   TABLA TIPO_TRAMO
+-- =========================================
 CREATE TABLE tipo_tramo (
-                            id_tipo_tramo integer,
-                            nombre varchar(50) not null,
-                            primary key (id_tipo_tramo)
+                            id_tipo_tramo SERIAL PRIMARY KEY,
+                            nombre VARCHAR(50) NOT NULL
 );
 
+-- =========================================
+--   TABLA TRANSPORTISTA
+-- =========================================
+CREATE TABLE transportista (
+                               id_transportista SERIAL PRIMARY KEY,
+                               nombre VARCHAR(100),
+                               apellido VARCHAR(100),
+                               dni VARCHAR(20),
+                               telefono VARCHAR(20)
+);
+
+-- =========================================
+--   TABLA CAMION
+-- =========================================
+CREATE TABLE camion (
+                        id_camion SERIAL PRIMARY KEY,
+                        capacidad_peso NUMERIC(10,2),
+                        capacidad_volumen NUMERIC(10,2),
+                        marca VARCHAR(255),
+                        modelo VARCHAR(255),
+                        patente VARCHAR(20),
+                        id_transportista INT REFERENCES transportista(id_transportista)
+);
+
+-- =========================================
+--   TABLA RUTA
+-- =========================================
+CREATE TABLE ruta (
+                      id_ruta SERIAL PRIMARY KEY,
+                      cantidad_depositos INT,
+                      cantidad_tramos INT,
+                      costo_total NUMERIC(10,2),
+                      distancia_total_km NUMERIC(10,2),
+                      tiempo_estimado_min NUMERIC(10,2)
+);
+
+-- =========================================
+--   TABLA TRAMO
+-- =========================================
 CREATE TABLE tramo (
-                       costo_aproximado numeric(10,2),
-                       costo_real numeric(10,2),
-                       distancia_km float,
-                       latitud_destino float,
-                       latitud_origen float,
-                       longitud_destino float,
-                       longitud_origen float,
-                       fecha_hora_fin varchar(255),
-                       fecha_hora_inicio varchar(255),
-                       id_camion bigint,
-                       id_deposito_destino bigint,
-                       id_deposito_origen bigint,
-                       id_estado bigint,
-                       id_ruta bigint,
-                       id_tipo_tramo bigint,
-                       id_tramo integer,
-                       primary key (id_tramo)
+                       id_tramo SERIAL PRIMARY KEY,
+                       latitud_origen NUMERIC(10,6),
+                       longitud_origen NUMERIC(10,6),
+                       latitud_destino NUMERIC(10,6),
+                       longitud_destino NUMERIC(10,6),
+                       fecha_hora_inicio TIMESTAMP,
+                       fecha_hora_fin TIMESTAMP,
+                       distancia_km NUMERIC(10,2),
+                       costo_aproximado NUMERIC(10,2),
+                       costo_real NUMERIC(10,2),
+
+                       id_deposito_origen INT REFERENCES deposito(id_deposito),
+                       id_deposito_destino INT REFERENCES deposito(id_deposito),
+                       id_camion INT REFERENCES camion(id_camion),
+                       id_ruta INT REFERENCES ruta(id_ruta),
+                       id_tipo_tramo INT REFERENCES tipo_tramo(id_tipo_tramo),
+                       id_estado INT REFERENCES estado_tramo(id_estado)
 );
 
-CREATE TABLE "TRANSPORTISTA" (
-                                 "id_transportista" INTEGER,
-                                 "nombre" TEXT,
-                                 "apellido" TEXT,
-                                 "dni" TEXT,
-                                 "telefono" TEXT,
-                                 PRIMARY KEY("id_transportista" AUTOINCREMENT)
+
+-- =========================================
+--   TABLA TARIFAS
+-- =========================================
+CREATE TABLE tarifas (
+                         id SERIAL PRIMARY KEY,
+                         activo BOOLEAN NOT NULL,
+                         descripcion VARCHAR(255),
+                         tipo VARCHAR(255),
+                         unidad VARCHAR(20),
+                         valor NUMERIC(10,2) NOT NULL
 );
