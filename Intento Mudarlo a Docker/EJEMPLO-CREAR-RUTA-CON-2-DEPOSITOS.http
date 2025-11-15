@@ -1,0 +1,106 @@
+### ========================================
+### 🎯 CREAR RUTA DEFINITIVA CON 2 DEPÓSITOS
+### Ruta: Salta → Santiago del Estero → Rosario → Mar del Plata
+### ========================================
+
+POST http://localhost:8095/api/rutas/crear-desde-tentativa
+Content-Type: application/json
+
+{
+  "idSolicitud": 1,
+  "tipoRuta": "CON_2_DEPOSITOS",
+  "latitudOrigen": -24.7821,
+  "longitudOrigen": -65.4232,
+  "latitudDestino": -38.0055,
+  "longitudDestino": -57.5426,
+  "tramos": [
+    {
+      "orden": 1,
+      "tipoTramo": "a_deposito",
+      "latitudOrigen": -24.7821,
+      "longitudOrigen": -65.4232,
+      "nombreOrigen": "Punto de origen",
+      "idDepositoOrigen": null,
+      "latitudDestino": -27.7834,
+      "longitudDestino": -64.2642,
+      "nombreDestino": "Logística Santiago del Estero",
+      "idDepositoDestino": 43,
+      "distanciaKm": 429.1974,
+      "duracionMinutos": 300.705,
+      "costoAproximado": 103715.40,
+      "costoEstadiaDiario": 2600
+    },
+    {
+      "orden": 2,
+      "tipoTramo": "entre_depositos",
+      "latitudOrigen": -27.7834,
+      "longitudOrigen": -64.2642,
+      "nombreOrigen": "Logística Santiago del Estero",
+      "idDepositoOrigen": 43,
+      "latitudDestino": -32.9442,
+      "longitudDestino": -60.6505,
+      "nombreDestino": "Parque Logístico Rosario",
+      "idDepositoDestino": 42,
+      "distanciaKm": 752.8094,
+      "duracionMinutos": 531.8716666666667,
+      "costoAproximado": 178146.16,
+      "costoEstadiaDiario": 4200
+    },
+    {
+      "orden": 3,
+      "tipoTramo": "desde_deposito",
+      "latitudOrigen": -32.9442,
+      "longitudOrigen": -60.6505,
+      "nombreOrigen": "Parque Logístico Rosario",
+      "idDepositoOrigen": 42,
+      "latitudDestino": -38.0055,
+      "longitudDestino": -57.5426,
+      "nombreDestino": "Punto de destino",
+      "idDepositoDestino": null,
+      "distanciaKm": 711.6418000000001,
+      "duracionMinutos": 493.24666666666667,
+      "costoAproximado": 168677.61,
+      "costoEstadiaDiario": null
+    }
+  ]
+}
+
+###
+
+### ========================================
+### 📊 VERIFICAR RUTA CREADA
+### ========================================
+
+### Obtener todas las rutas (busca el ID de la última creada)
+GET http://localhost:8095/api/rutas
+
+### Obtener la ruta específica (cambia {id} por el ID que obtengas)
+GET http://localhost:8095/api/rutas/{id}
+
+### Obtener los tramos de la ruta
+GET http://localhost:8095/api/rutas/{id}/tramos
+
+###
+
+### ========================================
+### 📝 NOTAS IMPORTANTES:
+### ========================================
+#
+# ✅ CAMPOS OBLIGATORIOS:
+# - idSolicitud: ID de la solicitud a la que pertenece esta ruta
+# - tipoRuta: Tipo de ruta ("DIRECTA", "CON_1_DEPOSITO", "CON_2_DEPOSITOS")
+# - latitudOrigen y longitudOrigen: Coordenadas del origen
+# - latitudDestino y longitudDestino: Coordenadas del destino
+# - tramos: Array con todos los tramos de la ruta
+#
+# 💡 DIFERENCIAS CON EL ENDPOINT /api/rutas:
+# ❌ POST /api/rutas - Espera una entidad Rutas completa (con objetos TipoTramo)
+# ✅ POST /api/rutas/crear-desde-tentativa - Acepta la ruta tentativa directamente
+#
+# 🎯 FLUJO CORRECTO:
+# 1. POST /api/rutas/tentativas - Genera 3 opciones
+# 2. Usuario elige una opción (DIRECTA, CON_1_DEPOSITO o CON_2_DEPOSITOS)
+# 3. POST /api/rutas/crear-desde-tentativa - Crea la ruta en BD
+# 4. La respuesta incluye el ID de la ruta creada
+#
+

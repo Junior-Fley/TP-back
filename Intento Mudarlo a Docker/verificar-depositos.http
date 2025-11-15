@@ -1,0 +1,6 @@
+### Verificar depósitos en la base de datos
+GET http://localhost:8095/api/depositos
+
+### Verificar un depósito específico
+GET http://localhost:8095/api/depositos/1
+
