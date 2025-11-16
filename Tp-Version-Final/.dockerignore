@@ -1,0 +1,40 @@
+# Ignorar archivos de Git
+.git
+.gitignore
+.gitattributes
+
+# Ignorar archivos de IDE
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# Ignorar targets y builds
+**/target/
+**/build/
+
+# Ignorar archivos de configuración local
+**/*.db
+**/*.sqlite
+**/database/*.db
+
+# Ignorar documentación y archivos de test
+**/*.md
+**/DOCUMENTACION-*.md
+**/pruebas-*.http
+**/*.http
+**/README.md
+
+# Ignorar archivos de log
+**/*.log
+
+# Ignorar archivos temporales
+**/*.tmp
+**/*.temp
+**/.DS_Store
+**/Thumbs.db
+
+# Ignorar node_modules si existiera
+**/node_modules/
+

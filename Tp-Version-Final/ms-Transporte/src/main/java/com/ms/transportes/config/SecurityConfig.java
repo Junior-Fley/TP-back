@@ -39,11 +39,11 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-//    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-//    private String issuerUri;
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -52,31 +52,31 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
+//                        .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
 //
-//
-//                        // Public / swagger
-//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-//
-//                        // Camiones - gestión por ADMIN
-//                        .requestMatchers(HttpMethod.GET, "/api/camiones").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/camiones/*").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.POST, "/api/camiones").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.PUT, "/api/camiones/*").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/camiones/*").hasRole("ADMIN")
-//
-//                        // Transportistas - gestión por ADMIN, consulta por TRANSPORTISTA
-//                        .requestMatchers(HttpMethod.GET, "/api/transportistas").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/transportistas/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
-//                        .requestMatchers(HttpMethod.POST, "/api/transportistas").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.PUT, "/api/transportistas/*").hasRole("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/transportistas/*").hasRole("ADMIN")
-//
-//                        // Tramos de ejemplo - gestión por ADMIN
-//                        .requestMatchers("/api/tramos/**").hasRole("ADMIN")
-//
-//                        // Cualquier otra petición requiere autenticación
-//                        .anyRequest().authenticated()
+
+                        // Public / swagger
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+
+                        // Camiones - gestión por ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/camiones").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/camiones/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/camiones").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/camiones/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/camiones/*").hasRole("ADMIN")
+
+                        // Transportistas - gestión por ADMIN, consulta por TRANSPORTISTA
+                        .requestMatchers(HttpMethod.GET, "/api/transportistas").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/transportistas/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
+                        .requestMatchers(HttpMethod.POST, "/api/transportistas").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/transportistas/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/transportistas/*").hasRole("ADMIN")
+
+                        // Tramos de ejemplo - gestión por ADMIN
+                        .requestMatchers("/api/tramos/**").hasRole("ADMIN")
+
+                        // Cualquier otra petición requiere autenticación
+                        .anyRequest().authenticated()
 
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -116,38 +116,38 @@ public class SecurityConfig {
      * Esto permite que el microservicio arranque sin problemas incluso si Keycloak
      * no está disponible. El error solo ocurrirá si se intenta validar un JWT.
      */
-//    @Bean
-//    public JwtDecoder jwtDecoder() {
-//        // Crear un JwtDecoder que se inicializa de forma lazy
-//        return new JwtDecoder() {
-//            private volatile JwtDecoder delegate;
-//
-//            @Override
-//            public Jwt decode(String token) throws JwtException {
-//                if (delegate == null) {
-//                    synchronized (this) {
-//                        if (delegate == null) {
-//                            try {
-//                                // Aquí es donde se conecta a Keycloak
-//                                NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
-//
-//                                // Configura validador de timestamp con clock-skew de 120 segundos
-//                                JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
-//                                OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
-//
-//                                jwtDecoder.setJwtValidator(withClockSkew);
-//                                delegate = jwtDecoder;
-//                            } catch (Exception e) {
-//                                throw new JwtException("❌ No se pudo conectar a Keycloak en: " + issuerUri +
-//                                    ". Asegúrate de que Keycloak esté corriendo.", e);
-//                            }
-//                        }
-//                    }
-//                }
-//                return delegate.decode(token);
-//            }
-//        };
-//    }
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        // Crear un JwtDecoder que se inicializa de forma lazy
+        return new JwtDecoder() {
+            private volatile JwtDecoder delegate;
+
+            @Override
+            public Jwt decode(String token) throws JwtException {
+                if (delegate == null) {
+                    synchronized (this) {
+                        if (delegate == null) {
+                            try {
+                                // Aquí es donde se conecta a Keycloak
+                                NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
+
+                                // Configura validador de timestamp con clock-skew de 120 segundos
+                                JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
+                                OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
+
+                                jwtDecoder.setJwtValidator(withClockSkew);
+                                delegate = jwtDecoder;
+                            } catch (Exception e) {
+                                throw new JwtException("❌ No se pudo conectar a Keycloak en: " + issuerUri +
+                                    ". Asegúrate de que Keycloak esté corriendo.", e);
+                            }
+                        }
+                    }
+                }
+                return delegate.decode(token);
+            }
+        };
+    }
 
     static class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
         @Override
@@ -179,4 +179,3 @@ public class SecurityConfig {
         }
     }
 }
-

@@ -59,7 +59,7 @@ public class CamionController {
      * Crear camión con datos simplificados
      * POST /api/camiones/crear
      */
-    @PostMapping("/crear")
+    @PostMapping("/creacion")
     public ResponseEntity<?> crearCamion(@RequestBody CrearCamionDTO dto) {
         try {
             Camion camion = service.crearCamion(dto);
@@ -78,7 +78,7 @@ public class CamionController {
      * Asignar transportista a un camión
      * PUT /api/camiones/{idCamion}/asignar-transportista
      */
-    @PutMapping("/{idCamion}/asignar-transportista")
+    @PutMapping("/{idCamion}/asignacion-transportista")
     public ResponseEntity<?> asignarTransportista(
             @PathVariable("idCamion") Long idCamion,
             @RequestBody AsignarTransportistaDTO dto) {

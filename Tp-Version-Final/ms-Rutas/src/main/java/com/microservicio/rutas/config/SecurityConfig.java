@@ -31,13 +31,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * ⚠️ SEGURIDAD TEMPORALMENTE DESACTIVADA
- * Configuración de seguridad para ms-Rutas SIN Keycloak
- * Para desarrollo y pruebas sin autenticación
+ * 🔒 CONFIGURACIÓN DE SEGURIDAD CON KEYCLOAK
+ * Configuración de seguridad para ms-Rutas con autenticación y autorización
+ * Roles: ADMIN, CLIENTE, TRANSPORTISTA
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,7 +50,59 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // ⚠️ PERMITE TODO - Solo para desarrollo
+                        // Endpoints públicos (Swagger, actuator)
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+
+                        // === RUTAS ===
+                        // GET /api/rutas - Listar todas las rutas: Solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
+
+                        // GET /api/rutas/tentativas - Listar rutas tentativas: Solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
+
+                        // GET /api/rutas/{id}/tentativa - Ver ruta tentativa específica: Solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/tentativa").hasRole("ADMIN")
+
+                        // GET /api/rutas/{id}/resumen - Ver resumen de ruta: ADMIN y CLIENTE
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/resumen").hasAnyRole("ADMIN", "CLIENTE")
+
+                        // GET /api/rutas/{id} - Ver detalle de ruta: ADMIN y CLIENTE
+                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
+
+                        // POST /api/rutas - Crear ruta: Solo ADMIN
+                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
+
+                        // DELETE /api/rutas/{id} - Eliminar ruta: Solo ADMIN
+                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
+
+                        // === TRAMOS ===
+                        // GET /api/tramos - Listar todos los tramos: Solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
+
+                        // GET /api/tramos/{id} - Ver tramo específico: ADMIN y TRANSPORTISTA
+                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
+
+                        // POST /api/tramos - Crear tramo: Solo ADMIN
+                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
+
+                        // DELETE /api/tramos/{id} - Eliminar tramo: Solo ADMIN
+                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
+
+                        // PUT /api/tramos/{id}/asignar-camion/{camionId} - Asignar camión: Solo ADMIN
+                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*/asignar-camion/*").hasRole("ADMIN")
+
+                        // === DEPÓSITOS ===
+                        // Todos los endpoints de depósitos: Solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/depositos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
+
+                        // Cualquier otra petición requiere autenticación
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 );
 
         return http.build();
@@ -64,69 +120,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-}
-
-/* ========================================
- * 🔒 CONFIGURACIÓN CON KEYCLOAK (COMENTADA)
- * ========================================
- * Para reactivar Keycloak:
- * 1. Descomenta toda la configuración de abajo
- * 2. Comenta la configuración simple de arriba
- * 3. Descomenta @EnableMethodSecurity
- * 4. Descomenta las propiedades de Keycloak en application.properties
- * 5. Asegúrate de que Keycloak esté corriendo
- */
-
-/*
-@Configuration
-@EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
-public class SecurityConfig {
-
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Public / swagger
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-
-                        // Rutas
-                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*\/tentativa").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*\/resumen").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
-                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
-
-                        // Tramos
-                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*\/asignar-camion/*").hasRole("ADMIN")
-
-                        // Depositos
-                        .requestMatchers(HttpMethod.GET, "/api/depositos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/depositos/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
-
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                );
-
-        return http.build();
     }
 
     @Bean
@@ -163,4 +156,3 @@ public class SecurityConfig {
         };
     }
 }
-*/

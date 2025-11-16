@@ -1,29 +1,23 @@
-# Etapa 1: Compilación
-FROM --platform=linux/amd64 eclipse-temurin:21-jdk AS builder
-
+# ==== build ====
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /build
 
-# Copiar el pom.xml padre al directorio padre relativo
-COPY pom.xml ../pom.xml
+COPY pom.xml ./pom.xml
+COPY ms-Transporte/pom.xml ms-Transporte/pom.xml
+COPY ms-Transporte/src ms-Transporte/src
+COPY ms-Rutas/pom.xml ms-Rutas/pom.xml
+COPY ms-Rutas/src ms-Rutas/src
+COPY ms-Solicitudes/pom.xml ms-Solicitudes/pom.xml
+COPY ms-Solicitudes/src ms-Solicitudes/src
+COPY Gateway/pom.xml Gateway/pom.xml
+COPY Gateway/src Gateway/src
 
-# Copiar el pom.xml del módulo
-COPY ms-Solicitudes/pom.xml .
+# Compilar solo ms-Solicitudes
+RUN mvn -DskipTests -pl ms-Solicitudes -am clean package spring-boot:repackage
 
-# Copiar código fuente
-COPY ms-Solicitudes/src ./src
-
-# Instalar Maven y compilar el proyecto
-RUN apt-get update && apt-get install -y maven && \
-    mvn clean package -DskipTests
-
-# Etapa 2: Imagen final
-FROM --platform=linux/amd64 eclipse-temurin:21-jre
-
+# ==== runtime ====
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-
-# Copiar el JAR compilado desde la etapa de build
-COPY --from=builder /build/target/*.jar app.jar
-
+COPY --from=build /build/ms-Solicitudes/target/*.jar app.jar
 EXPOSE 8090
-
 ENTRYPOINT ["java", "-jar", "app.jar"]

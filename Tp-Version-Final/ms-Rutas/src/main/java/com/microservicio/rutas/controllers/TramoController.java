@@ -68,7 +68,7 @@ public class TramoController {
      * PUT /api/tramos/{idTramo}/asignar-camion/{idCamion}
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{idTramo}/asignar-camion/{idCamion}")
+    @PutMapping("/{idTramo}/asignacion-camion/{idCamion}")
     public ResponseEntity<Tramo> asignarCamion(
             @PathVariable("idTramo") Long idTramo,
             @PathVariable("idCamion") Long idCamion) {
@@ -82,7 +82,7 @@ public class TramoController {
      *
      * Requerimiento Funcional: "Determinar el inicio o fin de un tramo de traslado. (Transportista)"
      */
-    @PostMapping("/{id}/iniciar")
+    @PostMapping("/{id}/inicializacion")
 //    @PreAuthorize("hasRole('TRANSPORTISTA') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> iniciarTramo(
             @PathVariable("id") Long id,
@@ -112,7 +112,7 @@ public class TramoController {
      * Requerimiento Funcional: "Determinar el inicio o fin de un tramo de traslado. (Transportista)"
      * Calcula el costo real según: kilometraje + combustible + estadía + gestión
      */
-    @PostMapping("/{id}/finalizar")
+    @PostMapping("/{id}/finalizacion")
 //    @PreAuthorize("hasRole('TRANSPORTISTA') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> finalizarTramo(
             @PathVariable("id") Long id,

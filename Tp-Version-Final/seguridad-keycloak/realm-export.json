@@ -1,0 +1,133 @@
+{
+  "id": "bda-realm",
+  "realm": "bda-realm",
+  "enabled": true,
+  "sslRequired": "none",
+
+  "accessTokenLifespan": 36000,
+  "accessTokenLifespanForImplicitFlow": 36000,
+  "clientSessionIdleTimeout": 36000,
+  "clientSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 36000,
+  "offlineSessionMaxLifespan": 2592000,
+
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Rol de administrador",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CLIENTE",
+        "description": "Rol de cliente",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "TRANSPORTISTA",
+        "description": "Rol de transportista",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN"],
+      "clientRoles": {}
+    },
+    {
+      "username": "cliente",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Cliente",
+      "lastName": "User",
+      "email": "cliente@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "cliente",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["CLIENTE"],
+      "clientRoles": {}
+    },
+    {
+      "username": "transportista",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Transportista",
+      "lastName": "User",
+      "email": "transportista@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "transportista",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["TRANSPORTISTA"],
+      "clientRoles": {}
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "bda-client",
+      "name": "BDA Public Client",
+      "description": "Cliente público para autenticación directa",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "bearerOnly": false,
+      "fullScopeAllowed": true
+    },
+    {
+      "clientId": "api-gateway",
+      "name": "API Gateway Client",
+      "description": "Cliente para el API Gateway",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "super-secreto-123",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "bearerOnly": false,
+      "fullScopeAllowed": true
+    }
+  ]
+}

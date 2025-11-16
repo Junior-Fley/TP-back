@@ -1,0 +1,66 @@
+### ============================================
+### TEST KEYCLOAK - Verificación y Autenticación
+### ============================================
+
+### 1. Verificar que Keycloak está corriendo
+GET http://localhost:8081/health/ready
+
+### 2. Obtener configuración del realm (debe existir)
+GET http://localhost:8081/realms/bda-realm
+
+### 3. Obtener las claves públicas (JWK Set)
+GET http://localhost:8081/realms/bda-realm/protocol/openid-connect/certs
+
+### ============================================
+### AUTENTICACIÓN - Obtener Token JWT
+### ============================================
+
+### 4. Login como CLIENTE
+POST http://localhost:8081/realms/bda-realm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=bda-client&grant_type=password&username=cliente&password=cliente
+
+### 5. Login como ADMIN
+POST http://localhost:8081/realms/bda-realm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=bda-client&grant_type=password&username=admin&password=admin
+
+### 6. Login como TRANSPORTISTA
+POST http://localhost:8081/realms/bda-realm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=bda-client&grant_type=password&username=transportista&password=transportista
+
+### ============================================
+### PRUEBAS CON EL GATEWAY (usar token obtenido arriba)
+### ============================================
+
+### 7. Crear solicitud a través del Gateway (requiere token de CLIENTE o ADMIN)
+POST http://localhost:8080/api/solicitudes/crear
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idCliente": 1,
+  "idContenedor": 1
+}
+
+### 8. Listar camiones a través del Gateway (requiere token de ADMIN o TRANSPORTISTA)
+GET http://localhost:8080/api/camiones
+Authorization: Bearer {{token}}
+
+### 9. Generar rutas tentativas (requiere token de ADMIN o TRANSPORTISTA)
+POST http://localhost:8080/api/rutas/tentativas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "latitudOrigen": -31.4201,
+  "longitudOrigen": -64.1888,
+  "latitudDestino": -34.6037,
+  "longitudDestino": -58.3816
+}
+
+###https://app.getpostman.com/join-team?invite_code=c898f81859507bc00e0fb1030c88abd30602afa6dc6eaa8c7f88a1c1f1c8a8a0&target_code=c2d83331ffa6a9a77a2b01f479f98a9c

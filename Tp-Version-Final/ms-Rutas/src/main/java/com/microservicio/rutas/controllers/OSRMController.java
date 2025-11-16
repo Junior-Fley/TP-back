@@ -39,7 +39,7 @@ public class OSRMController {
      *   "tiempoMinutos": 52.6
      * }
      */
-    @PostMapping("/calcular-distancia")
+    @PostMapping("/cálculo-distancia")
     public ResponseEntity<DistanciaRutaDTO> calcularDistancia(@RequestBody OSRMRequestDTO request) {
         DistanciaRutaDTO resultado = osrmService.calcularDistanciaYTiempo(request);
         return ResponseEntity.ok(resultado);

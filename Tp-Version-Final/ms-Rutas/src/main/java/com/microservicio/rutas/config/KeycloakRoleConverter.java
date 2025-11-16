@@ -1,4 +1,4 @@
-package com.TrabajoPractico.Gateway.config;
+package com.microservicio.rutas.config;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 /**
  * Convertidor personalizado para extraer roles de Keycloak
- * Los roles están en realm_access.roles y resource_access.<client>.roles
+ * Los roles están en realm_access.roles
  */
 @Component
 public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
@@ -20,7 +20,7 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
     public Collection<GrantedAuthority> convert(Jwt jwt) {
         Map<String, Object> realmAccess = jwt.getClaim("realm_access");
 
-        System.out.println("=== DEBUG: JWT Claims ===");
+        System.out.println("=== DEBUG: JWT Claims en ms-Rutas ===");
         System.out.println("All claims: " + jwt.getClaims());
         System.out.println("realm_access: " + realmAccess);
 
@@ -48,3 +48,4 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
         return authorities;
     }
 }
+

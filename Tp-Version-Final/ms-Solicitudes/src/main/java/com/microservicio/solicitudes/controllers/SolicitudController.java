@@ -46,7 +46,7 @@ public class SolicitudController {
      * Body: { "idCliente": 1, "idContenedor": 2 }
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-    @PostMapping("/crear")
+    @PostMapping("/creacion")
     public ResponseEntity<?> crearSolicitudSimple(@RequestBody CrearSolicitudDTO dto) {
         try {
             Solicitud solicitud = service.crearSolicitudSimple(dto);
@@ -158,7 +158,7 @@ public class SolicitudController {
      * PUT /api/solicitudes/{idSolicitud}/asignar-ruta
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{idSolicitud}/asignar-ruta")
+    @PutMapping("/{idSolicitud}/asignacion-ruta")
     public ResponseEntity<?> asignarRuta(
             @PathVariable("idSolicitud") Long idSolicitud,
             @RequestBody AsignarRutaDTO asignarRutaDTO) {
@@ -177,7 +177,7 @@ public class SolicitudController {
      * DELETE /api/solicitudes/{idSolicitud}/desasignar-ruta
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{idSolicitud}/desasignar-ruta")
+    @DeleteMapping("/{idSolicitud}/designacion-ruta")
     public ResponseEntity<?> desasignarRuta(@PathVariable("idSolicitud") Long idSolicitud) {
         try {
             Solicitud solicitud = service.desasignarRuta(idSolicitud);
@@ -237,7 +237,7 @@ public class SolicitudController {
      * Actualiza costoFinal y tiempoReal en la solicitud.
      * Cambia el estado a "entregada".
      */
-    @PostMapping("/{id}/finalizar")
+    @PostMapping("/{id}/finalizacion")
     public ResponseEntity<?> finalizarSolicitud(@PathVariable("id") Long id) {
         try {
             Solicitud solicitudFinalizada = service.finalizarSolicitud(id);
@@ -273,7 +273,7 @@ public class SolicitudController {
      * Endpoint para que el microservicio de Rutas notifique el inicio del primer tramo
      * Cambia el estado de la solicitud a "en proceso" y el contenedor a "en tránsito"
      */
-    @PutMapping("/{idSolicitud}/contenedor/iniciar-transito")
+    @PutMapping("/{idSolicitud}/contenedor/inicializacion-transito")
     public ResponseEntity<?> iniciarTransitoContenedor(@PathVariable Long idSolicitud) {
         try {
             Solicitud solicitud = service.obtenerPorId(idSolicitud);
@@ -308,7 +308,7 @@ public class SolicitudController {
      * ⭐ NUEVO: Endpoint para que el microservicio de Rutas notifique la finalización del último tramo
      * Cambia el estado de la solicitud a "completada" y el contenedor a "entregado"
      */
-    @PutMapping("/{idSolicitud}/finalizar")
+    @PutMapping("/{idSolicitud}/finalizacion")
     public ResponseEntity<?> finalizarSolicitudAutomatica(@PathVariable Long idSolicitud) {
         try {
             Solicitud solicitud = service.finalizarSolicitud(idSolicitud);

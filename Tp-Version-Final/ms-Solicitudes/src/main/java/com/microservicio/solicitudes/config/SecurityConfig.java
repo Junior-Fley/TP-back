@@ -1,23 +1,32 @@
 package com.microservicio.solicitudes.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; ///////////////////////////////////
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity; //////////////////////////////////////
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,8 +41,11 @@ import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity(prePostEnabled = true)/// ////////////////////////////////
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,46 +54,46 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                            .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
-//                // 🔓 Endpoints públicos (Swagger, Actuator)
-//                .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-//
-//                // 📋 SOLICITUDES - CLIENTE puede crear y consultar sus solicitudes
-//                .requestMatchers(HttpMethod.POST, "/api/solicitudes").hasRole("CLIENTE")
-//                .requestMatchers(HttpMethod.POST, "/api/solicitudes/completa").hasRole("CLIENTE")
-//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedor/*/estado").hasRole("CLIENTE")
-//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*/rutas").hasAnyRole("CLIENTE", "ADMIN")
-//
-//                // 📋 SOLICITUDES - ADMIN puede ver todas las solicitudes y eliminar
-//                .requestMatchers(HttpMethod.GET, "/api/solicitudes").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*").hasAnyRole("CLIENTE", "ADMIN")
-//                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*").hasRole("ADMIN")
-//
-//                // 🚚 RUTAS - Solo ADMIN puede asignar/desasignar rutas
-//                .requestMatchers(HttpMethod.PUT, "/api/solicitudes/*/asignar-ruta").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*/desasignar-ruta").hasRole("ADMIN")
-//
-//                // 📦 CONTENEDORES PENDIENTES - Solo ADMIN puede consultar contenedores pendientes
-//                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedores-pendientes").hasRole("ADMIN")
-//
-//                // 📦 CONTENEDORES - Solo ADMIN puede gestionar contenedores
-//                .requestMatchers(HttpMethod.GET, "/api/contenedores").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.GET, "/api/contenedores/*").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.POST, "/api/contenedores").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.PUT, "/api/contenedores/*").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.DELETE, "/api/contenedores/*").hasRole("ADMIN")
-//
-//                // 👥 CLIENTES - Solo ADMIN puede gestionar clientes
-//                .requestMatchers(HttpMethod.GET, "/api/clientes").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.GET, "/api/clientes/*").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.GET, "/api/clientes/dni/*").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.GET, "/api/clientes/mail/*").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.POST, "/api/clientes").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.PUT, "/api/clientes/*").hasRole("ADMIN")
-//                .requestMatchers(HttpMethod.DELETE, "/api/clientes/*").hasRole("ADMIN")
-//
-//                // Cualquier otra petición requiere autenticación
-//                .anyRequest().authenticated()
+//                            .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
+                // 🔓 Endpoints públicos (Swagger, Actuator)
+                .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                // 📋 SOLICITUDES - CLIENTE puede crear y consultar sus solicitudes
+                .requestMatchers(HttpMethod.POST, "/api/solicitudes").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.POST, "/api/solicitudes/completa").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedor/*/estado").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*/rutas").hasAnyRole("CLIENTE", "ADMIN")
+
+                // 📋 SOLICITUDES - ADMIN puede ver todas las solicitudes y eliminar
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*").hasAnyRole("CLIENTE", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*").hasRole("ADMIN")
+
+                // 🚚 RUTAS - Solo ADMIN puede asignar/desasignar rutas
+                .requestMatchers(HttpMethod.PUT, "/api/solicitudes/*/asignar-ruta").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/solicitudes/*/desasignar-ruta").hasRole("ADMIN")
+
+                // 📦 CONTENEDORES PENDIENTES - Solo ADMIN puede consultar contenedores pendientes
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedores-pendientes").hasRole("ADMIN")
+
+                // 📦 CONTENEDORES - Solo ADMIN puede gestionar contenedores
+                .requestMatchers(HttpMethod.GET, "/api/contenedores").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/contenedores/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/contenedores").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/contenedores/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/contenedores/*").hasRole("ADMIN")
+
+                // 👥 CLIENTES - Solo ADMIN puede gestionar clientes
+                .requestMatchers(HttpMethod.GET, "/api/clientes").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/clientes/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/clientes/dni/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/clientes/mail/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/clientes").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/clientes/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/clientes/*").hasRole("ADMIN")
+
+                // Cualquier otra petición requiere autenticación
+                .anyRequest().authenticated()
 
 
             )
@@ -117,6 +129,37 @@ public class SecurityConfig {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
         return jwtAuthenticationConverter;
+    }
+
+    /**
+     * JwtDecoder personalizado con validación lazy y clock-skew
+     * Esto permite que el microservicio valide tokens correctamente incluso con diferencias de tiempo
+     */
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return new JwtDecoder() {
+            private volatile JwtDecoder delegate;
+
+            @Override
+            public Jwt decode(String token) throws JwtException {
+                if (delegate == null) {
+                    synchronized (this) {
+                        if (delegate == null) {
+                            try {
+                                NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
+                                JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
+                                OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
+                                jwtDecoder.setJwtValidator(withClockSkew);
+                                delegate = jwtDecoder;
+                            } catch (Exception e) {
+                                throw new JwtException("Error al inicializar JwtDecoder: " + e.getMessage(), e);
+                            }
+                        }
+                    }
+                }
+                return delegate.decode(token);
+            }
+        };
     }
 
     /**

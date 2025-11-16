@@ -97,7 +97,7 @@ public class RutasController {
      *
      * Este endpoint corrige los tramos que no tienen id_ruta asignado en la base de datos
      */
-    @PostMapping("/corregir-tramos")
+    @PostMapping("/correcion-tramos")
     public ResponseEntity<String> corregirRelacionTramos() {
         try {
             String resultado = service.corregirRelacionTramos();
@@ -124,7 +124,7 @@ public class RutasController {
      * }
      */
     // @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')") // ⚠️ COMENTADO - Sin autenticación
-    @PostMapping("/crear-desde-tentativa")
+    @PostMapping("/creacion-desde-tentativa")
     public ResponseEntity<?> crearRutaDesdeTentativa(
             @RequestBody com.microservicio.rutas.dtos.CrearRutaDesdeTeantativaDTO dto) {
         try {
