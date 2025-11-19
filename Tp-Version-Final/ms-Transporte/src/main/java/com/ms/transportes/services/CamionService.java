@@ -105,6 +105,61 @@ public class CamionService {
     }
 
     /**
+     * Actualiza un camión existente con todos sus atributos
+     */
+    public Camion actualizarCamion(Long idCamion, com.ms.transportes.dtos.ActualizarCamionDTO dto) {
+        log.info("🔄 Actualizando camión con ID: {}", idCamion);
+
+        Camion camion = repo.findById(idCamion)
+                .orElseThrow(() -> new RuntimeException("Camión no encontrado con ID: " + idCamion));
+
+        // Verificar si la patente ya existe en otro camión
+        if (dto.getPatente() != null && !dto.getPatente().equals(camion.getPatente())) {
+            repo.findByPatente(dto.getPatente().toUpperCase()).ifPresent(c -> {
+                if (!c.getIdCamion().equals(idCamion)) {
+                    throw new RuntimeException("Ya existe un camión con la patente: " + dto.getPatente());
+                }
+            });
+            camion.setPatente(dto.getPatente().toUpperCase());
+        }
+
+        // Actualizar atributos básicos
+        if (dto.getTelefono() != null) {
+            camion.setTelefono(dto.getTelefono());
+        }
+        if (dto.getCapacidadPeso() != null) {
+            camion.setCapacidadPeso(dto.getCapacidadPeso());
+        }
+        if (dto.getCapacidadVolumen() != null) {
+            camion.setCapacidadVolumen(dto.getCapacidadVolumen());
+        }
+        if (dto.getCostoBaseKm() != null) {
+            camion.setCostoBaseKm(dto.getCostoBaseKm());
+        }
+        if (dto.getConsumoCombustibleKm() != null) {
+            camion.setConsumoCombustibleKm(dto.getConsumoCombustibleKm());
+        }
+        if (dto.getDisponibilidad() != null) {
+            camion.setDisponibilidad(dto.getDisponibilidad());
+        }
+
+        // Actualizar transportista si se proporciona
+        if (dto.getIdTransportista() != null) {
+            Transportista transportista = transportistaRepository.findById(dto.getIdTransportista())
+                    .orElseThrow(() -> new RuntimeException("Transportista no encontrado con ID: " + dto.getIdTransportista()));
+            camion.setTransportista(transportista);
+            log.info("✅ Transportista {} {} asignado al camión",
+                    transportista.getNombre(),
+                    transportista.getApellido());
+        }
+
+        Camion camionActualizado = repo.save(camion);
+        log.info("✅ Camión {} actualizado correctamente", camionActualizado.getPatente());
+
+        return camionActualizado;
+    }
+
+    /**
      * Genera un teléfono aleatorio con formato: 351XXXXXXX
      */
     private String generarTelefonoAleatorio() {
