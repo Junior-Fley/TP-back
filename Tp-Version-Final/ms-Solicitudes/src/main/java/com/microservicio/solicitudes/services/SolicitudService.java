@@ -99,14 +99,24 @@ public class SolicitudService {
             } else {
                 System.out.println(">>> Cliente no existe, creando nuevo...");
                 // El cliente no existe, crear uno nuevo
-                cliente = new Cliente();
-                cliente.setNombre(requestDTO.getNombreCliente());
-                cliente.setApellido(requestDTO.getApellidoCliente());
-                cliente.setDni(requestDTO.getDniCliente());
-                cliente.setTelefono(requestDTO.getTelefonoCliente());
-                cliente.setMail(requestDTO.getMailCliente());
-                cliente.setDireccion(requestDTO.getDireccionCliente());
-                cliente = clienteService.crear(cliente);
+                Cliente nuevoCliente = new Cliente();
+                nuevoCliente.setNombre(requestDTO.getNombreCliente());
+                nuevoCliente.setApellido(requestDTO.getApellidoCliente());
+                nuevoCliente.setDni(requestDTO.getDniCliente());
+                nuevoCliente.setTelefono(requestDTO.getTelefonoCliente());
+                nuevoCliente.setMail(requestDTO.getMailCliente());
+                nuevoCliente.setDireccion(requestDTO.getDireccionCliente());
+
+                // Usar el nuevo método con DTO
+                com.microservicio.solicitudes.dtos.ClienteDTO clienteDTO = new com.microservicio.solicitudes.dtos.ClienteDTO();
+                clienteDTO.setNombre(requestDTO.getNombreCliente());
+                clienteDTO.setApellido(requestDTO.getApellidoCliente());
+                clienteDTO.setDni(requestDTO.getDniCliente());
+                clienteDTO.setTelefono(requestDTO.getTelefonoCliente());
+                clienteDTO.setMail(requestDTO.getMailCliente());
+                clienteDTO.setDireccion(requestDTO.getDireccionCliente());
+
+                cliente = clienteService.crearCliente(clienteDTO);
                 System.out.println(">>> Cliente creado con ID: " + cliente.getIdCliente());
             }
 

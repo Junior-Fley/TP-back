@@ -1,6 +1,8 @@
 package com.microservicio.rutas.services;
 
+import com.microservicio.rutas.dtos.DepositoDTO;
 import com.microservicio.rutas.models.Deposito;
+import com.microservicio.rutas.models.Ciudad;
 import com.microservicio.rutas.repositories.DepositoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import java.util.Optional;
 public class DepositoService {
 
     private final DepositoRepository repository;
+    private final CiudadService ciudadService;
 
     // Listar todos
     public List<Deposito> obtenerTodos() {
@@ -24,7 +27,52 @@ public class DepositoService {
         return repository.findById(id);
     }
 
-    // Crear nuevo
+    // Crear nuevo desde DTO
+    public Deposito crearDeposito(DepositoDTO dto) {
+        if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
+            throw new RuntimeException("El nombre del depósito es obligatorio");
+        }
+
+        Deposito deposito = new Deposito();
+        deposito.setNombre(dto.getNombre().trim());
+        deposito.setDireccion(dto.getDireccion());
+        deposito.setLatitud(dto.getLatitud() != null ? dto.getLatitud() : 0.0);
+        deposito.setLongitud(dto.getLongitud() != null ? dto.getLongitud() : 0.0);
+        deposito.setCostoEstadiaDiario(dto.getCostoEstadiaDiario());
+
+        if (dto.getIdCiudad() != null) {
+            Ciudad ciudad = ciudadService.buscarPorId(dto.getIdCiudad())
+                    .orElseThrow(() -> new RuntimeException("Ciudad no encontrada con ID: " + dto.getIdCiudad()));
+            deposito.setCiudad(ciudad);
+        }
+
+        return repository.save(deposito);
+    }
+
+    // Actualizar existente desde DTO
+    public Deposito actualizarDeposito(Long id, DepositoDTO dto) {
+        return repository.findById(id)
+                .map(deposito -> {
+                    if (dto.getNombre() != null && !dto.getNombre().trim().isEmpty()) {
+                        deposito.setNombre(dto.getNombre().trim());
+                    }
+                    if (dto.getDireccion() != null) deposito.setDireccion(dto.getDireccion());
+                    if (dto.getLatitud() != null) deposito.setLatitud(dto.getLatitud());
+                    if (dto.getLongitud() != null) deposito.setLongitud(dto.getLongitud());
+                    if (dto.getCostoEstadiaDiario() != null) deposito.setCostoEstadiaDiario(dto.getCostoEstadiaDiario());
+
+                    if (dto.getIdCiudad() != null) {
+                        Ciudad ciudad = ciudadService.buscarPorId(dto.getIdCiudad())
+                                .orElseThrow(() -> new RuntimeException("Ciudad no encontrada con ID: " + dto.getIdCiudad()));
+                        deposito.setCiudad(ciudad);
+                    }
+
+                    return repository.save(deposito);
+                })
+                .orElseThrow(() -> new RuntimeException("Depósito no encontrado con id " + id));
+    }
+
+    // Crear nuevo (compatibilidad)
     public Deposito crear(Deposito deposito) {
         return repository.save(deposito);
     }

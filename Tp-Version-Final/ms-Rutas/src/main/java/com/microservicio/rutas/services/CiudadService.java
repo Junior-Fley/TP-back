@@ -1,5 +1,6 @@
 package com.microservicio.rutas.services;
 
+import com.microservicio.rutas.dtos.CiudadDTO;
 import com.microservicio.rutas.models.Ciudad;
 import com.microservicio.rutas.repositories.CiudadRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,30 @@ public class CiudadService {
         return repository.findById(id);
     }
 
-    // Crear una nueva ciudad
+    // Crear una nueva ciudad (desde DTO)
+    public Ciudad crearCiudad(CiudadDTO dto) {
+        // Validaciones básicas
+        if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
+            throw new RuntimeException("El nombre de la ciudad es obligatorio");
+        }
+        Ciudad ciudad = new Ciudad();
+        ciudad.setNombre(dto.getNombre().trim());
+        return repository.save(ciudad);
+    }
+
+    // Actualizar ciudad existente (desde DTO)
+    public Ciudad actualizarCiudad(Long id, CiudadDTO dto) {
+        return repository.findById(id)
+                .map(ciudad -> {
+                    if (dto.getNombre() != null && !dto.getNombre().trim().isEmpty()) {
+                        ciudad.setNombre(dto.getNombre().trim());
+                    }
+                    return repository.save(ciudad);
+                })
+                .orElseThrow(() -> new RuntimeException("Ciudad no encontrada con id " + id));
+    }
+
+    // Crear una nueva ciudad (compatibilidad con el uso anterior)
     public Ciudad crear(Ciudad ciudad) {
         return repository.save(ciudad);
     }
