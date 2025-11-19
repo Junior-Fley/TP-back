@@ -8,9 +8,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 @RestController
 @RequestMapping("/api/estados-tramo")
 @RequiredArgsConstructor
+@Hidden
 public class EstadoTramoController {
 
     private final EstadoTramoService service;
