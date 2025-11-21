@@ -78,20 +78,16 @@ public class TramoController {
 
     /**
      * 🚚 Registra el INICIO de un tramo de traslado (Transportista)
-     * POST /api/tramos/{id}/iniciar
+     * POST /api/tramos/{id}/inicializacion
      *
      * Requerimiento Funcional: "Determinar el inicio o fin de un tramo de traslado. (Transportista)"
+     * Body opcional: { "observaciones": "texto" }
      */
     @PostMapping("/{id}/inicializacion")
 //    @PreAuthorize("hasRole('TRANSPORTISTA') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> iniciarTramo(
             @PathVariable("id") Long id,
             @RequestBody(required = false) IniciarTramoDTO dto) {
-
-        if (dto == null) {
-            dto = new IniciarTramoDTO();
-        }
-        dto.setIdTramo(id);
 
         Tramo tramoIniciado = service.iniciarTramo(id, dto);
 
@@ -107,21 +103,17 @@ public class TramoController {
 
     /**
      * 🏁 Registra la FINALIZACIÓN de un tramo y calcula el costo real (Transportista)
-     * POST /api/tramos/{id}/finalizar
+     * POST /api/tramos/{id}/finalizacion
      *
      * Requerimiento Funcional: "Determinar el inicio o fin de un tramo de traslado. (Transportista)"
      * Calcula el costo real según: kilometraje + combustible + estadía + gestión
+     * Body opcional: { "observaciones": "texto" }
      */
     @PostMapping("/{id}/finalizacion")
 //    @PreAuthorize("hasRole('TRANSPORTISTA') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> finalizarTramo(
             @PathVariable("id") Long id,
             @RequestBody(required = false) FinalizarTramoDTO dto) {
-
-        if (dto == null) {
-            dto = new FinalizarTramoDTO();
-        }
-        dto.setIdTramo(id);
 
         Tramo tramoFinalizado = service.finalizarTramo(id, dto);
 

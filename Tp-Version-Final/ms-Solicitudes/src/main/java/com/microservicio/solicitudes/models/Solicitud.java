@@ -1,6 +1,7 @@
 package com.microservicio.solicitudes.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.microservicio.solicitudes.dtos.RutasTentativasResponseDTO;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -47,4 +48,22 @@ public class Solicitud {
 
     @Column(name = "id_ruta")
     private Long idRuta;
+
+    // Coordenadas de origen
+    @Column(name = "latitud_origen")
+    private Double latitudOrigen;
+
+    @Column(name = "longitud_origen")
+    private Double longitudOrigen;
+
+    // Coordenadas de destino
+    @Column(name = "latitud_destino")
+    private Double latitudDestino;
+
+    @Column(name = "longitud_destino")
+    private Double longitudDestino;
+
+    // Lista temporal de rutas tentativas (no se persiste en BD)
+    @Transient
+    private RutasTentativasResponseDTO rutasTentativas;
 }

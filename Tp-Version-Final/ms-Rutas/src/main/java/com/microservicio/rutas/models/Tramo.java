@@ -64,4 +64,7 @@ public class Tramo {
     @Column(name = "distancia_km")
     private Double distanciaKm;
 
+    @Column(name = "observaciones", length = 500)
+    private String observaciones;
+
 }

@@ -197,7 +197,7 @@ public class TramoService {
     }
 
     /**
-     * Registra el inicio de un tramo (Transportista)
+     * Registra el INICIO de un tramo de traslado (Transportista)
      * Si es el primer tramo de la ruta, notifica al microservicio de Solicitudes
      * para cambiar el estado del contenedor a "en tránsito"
      */
@@ -218,11 +218,15 @@ public class TramoService {
             throw new RuntimeException("El tramo debe estar en estado 'asignado' para poder iniciarse");
         }
 
-        // Registrar fecha de inicio
-        LocalDateTime fechaInicio = dto.getFechaHoraInicio() != null
-            ? dto.getFechaHoraInicio()
-            : LocalDateTime.now();
+        // ⭐ MODIFICADO: Tomar fecha/hora actual automáticamente
+        LocalDateTime fechaInicio = LocalDateTime.now();
         tramo.setFechaHoraInicio(fechaInicio);
+
+        // ⭐ NUEVO: Guardar observaciones si se proporcionan
+        if (dto != null && dto.getObservaciones() != null && !dto.getObservaciones().trim().isEmpty()) {
+            tramo.setObservaciones(dto.getObservaciones());
+            log.info("📝 Observaciones registradas: {}", dto.getObservaciones());
+        }
 
         // Actualizar estado a "iniciado"
         EstadoTramo estadoIniciado = obtenerOCrearEstado("iniciado");
@@ -282,11 +286,21 @@ public class TramoService {
             throw new RuntimeException("El tramo no tiene fecha de inicio registrada");
         }
 
-        // Registrar fecha de finalización
-        LocalDateTime fechaFin = dto.getFechaHoraFin() != null
-            ? dto.getFechaHoraFin()
-            : LocalDateTime.now();
+        // ⭐ MODIFICADO: Tomar fecha/hora actual automáticamente
+        LocalDateTime fechaFin = LocalDateTime.now();
         tramo.setFechaHoraFin(fechaFin);
+
+        // ⭐ NUEVO: Guardar observaciones si se proporcionan
+        if (dto != null && dto.getObservaciones() != null && !dto.getObservaciones().trim().isEmpty()) {
+            // Concatenar con observaciones previas si existen
+            String observacionesActuales = tramo.getObservaciones();
+            if (observacionesActuales != null && !observacionesActuales.trim().isEmpty()) {
+                tramo.setObservaciones(observacionesActuales + " | Fin: " + dto.getObservaciones());
+            } else {
+                tramo.setObservaciones("Fin: " + dto.getObservaciones());
+            }
+            log.info("📝 Observaciones de finalización registradas: {}", dto.getObservaciones());
+        }
 
         // ⭐ CALCULAR COSTO REAL ⭐
         CostoRealDTO costoReal = calcularCostoReal(tramo);

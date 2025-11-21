@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "DTO para crear una solicitud completa con contenedor y cliente")
-public class SolicitudRequestDTO {
+public class  SolicitudRequestDTO {
 
     @Schema(description = "Peso del contenedor en kilogramos", example = "15000.0", required = true)
     private Double pesoContenedor;
@@ -31,9 +31,15 @@ public class SolicitudRequestDTO {
     @Schema(description = "Dirección completa del cliente", example = "Av. Colón 1234, Córdoba", required = true)
     private String direccionCliente;
 
-    @Deprecated
-    @Schema(description = "⚠️ DEPRECADO - Este campo se ignora. El estado siempre se asigna automáticamente como 'disponible'",
-            deprecated = true,
-            hidden = true)
-    private String estadoInicial;
+    @Schema(description = "Latitud del origen", example = "-34.603722", required = true)
+    private Double latitudOrigen;
+
+    @Schema(description = "Longitud del origen", example = "-58.381592", required = true)
+    private Double longitudOrigen;
+
+    @Schema(description = "Latitud del destino", example = "-34.921230", required = true)
+    private Double latitudDestino;
+
+    @Schema(description = "Longitud del destino", example = "-57.954540", required = true)
+    private Double longitudDestino;
 }

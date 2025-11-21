@@ -4,17 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
  * DTO para registrar el inicio de un tramo
+ * Solo requiere observaciones (opcional)
+ * La fecha/hora de inicio se toma automáticamente
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class IniciarTramoDTO {
-    private Long idTramo;
-    private LocalDateTime fechaHoraInicio;
-    private String observaciones;
+    private String observaciones; // Opcional
 }
-

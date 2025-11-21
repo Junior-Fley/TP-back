@@ -1,6 +1,8 @@
 package com.microservicio.solicitudes.clients;
 
+import com.microservicio.solicitudes.dtos.GenerarRutasTentativasRequestDTO;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
+import com.microservicio.solicitudes.dtos.RutasTentativasResponseDTO;
 import com.microservicio.solicitudes.dtos.TramoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -148,6 +150,70 @@ public class RutasApiClient {
 
         } catch (RestClientException e) {
             log.error("❌ Error al consultar tramos de ruta {}: {}", idRuta, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Genera rutas tentativas con coordenadas de origen y destino
+     */
+    public RutasTentativasResponseDTO generarRutasTentativas(GenerarRutasTentativasRequestDTO request) {
+        try {
+            log.info("🔍 Generando rutas tentativas desde ({}, {}) hasta ({}, {})",
+                    request.getLatitudOrigen(), request.getLongitudOrigen(),
+                    request.getLatitudDestino(), request.getLongitudDestino());
+
+            RutasTentativasResponseDTO response = rutasRestClient.post()
+                    .uri("/tentativas")
+                    .body(request)
+                    .retrieve()
+                    .body(RutasTentativasResponseDTO.class);
+
+            if (response != null) {
+                log.info("✅ Rutas tentativas generadas exitosamente");
+            }
+
+            return response;
+
+        } catch (RestClientException e) {
+            log.error("❌ Error al generar rutas tentativas: {}", e.getMessage());
+            throw new RuntimeException("No se pudo generar las rutas tentativas desde ms-rutas", e);
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Crea una ruta definitiva desde una ruta tentativa seleccionada
+     * Llama al endpoint POST /api/rutas/creacion-desde-tentativa
+     */
+    public Long crearRutaDesdeTentativa(com.microservicio.solicitudes.dtos.CrearRutaDesdeTentativaDTO dto) {
+        try {
+            log.info("🚀 Creando ruta definitiva desde tentativa {} para solicitud {}",
+                    dto.getTipoRuta(), dto.getIdSolicitud());
+
+            // Llamar al endpoint de creación
+            Map<String, Object> rutaCreada = rutasRestClient.post()
+                    .uri("/creacion-desde-tentativa")
+                    .body(dto)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+            if (rutaCreada == null) {
+                log.error("❌ No se recibió respuesta al crear ruta");
+                return null;
+            }
+
+            // Extraer el ID de la ruta creada
+            Long idRuta = ((Number) rutaCreada.get("idRuta")).longValue();
+            log.info("✅ Ruta definitiva creada con ID: {}", idRuta);
+
+            return idRuta;
+
+        } catch (RestClientException e) {
+            log.error("❌ Error al crear ruta desde tentativa: {}", e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.error("❌ Error al procesar creación de ruta: {}", e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

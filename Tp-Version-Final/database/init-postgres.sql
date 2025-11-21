@@ -109,8 +109,36 @@ CREATE TABLE IF NOT EXISTS solicitud (
     tiempo_real INTEGER,
     id_tarifa INTEGER,
     id_estado BIGINT REFERENCES estado(id_estado) ON DELETE SET NULL,
-    id_ruta BIGINT
+    id_ruta BIGINT,
+    latitud_origen DOUBLE PRECISION,
+    longitud_origen DOUBLE PRECISION,
+    latitud_destino DOUBLE PRECISION,
+    longitud_destino DOUBLE PRECISION
 );
+
+-- Agregar columnas de coordenadas si no existen (para migraciones)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name='solicitud' AND column_name='latitud_origen') THEN
+        ALTER TABLE solicitud ADD COLUMN latitud_origen DOUBLE PRECISION;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name='solicitud' AND column_name='longitud_origen') THEN
+        ALTER TABLE solicitud ADD COLUMN longitud_origen DOUBLE PRECISION;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name='solicitud' AND column_name='latitud_destino') THEN
+        ALTER TABLE solicitud ADD COLUMN latitud_destino DOUBLE PRECISION;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name='solicitud' AND column_name='longitud_destino') THEN
+        ALTER TABLE solicitud ADD COLUMN longitud_destino DOUBLE PRECISION;
+    END IF;
+END $$;
 
 -- =======================================
 -- TABLA: RUTA

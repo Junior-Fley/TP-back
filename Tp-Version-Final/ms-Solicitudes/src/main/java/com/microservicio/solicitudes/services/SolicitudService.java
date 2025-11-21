@@ -7,7 +7,10 @@ import com.microservicio.solicitudes.dtos.AsignarRutaDTO;
 import com.microservicio.solicitudes.dtos.ContenedorPendienteDTO;
 import com.microservicio.solicitudes.dtos.CrearSolicitudDTO;
 import com.microservicio.solicitudes.dtos.EstadoContenedorDTO;
+import com.microservicio.solicitudes.dtos.GenerarRutasTentativasRequestDTO;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
+import com.microservicio.solicitudes.dtos.RutaTentativaDTO;
+import com.microservicio.solicitudes.dtos.RutasTentativasResponseDTO;
 import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
 import com.microservicio.solicitudes.dtos.TramoDTO;
 import com.microservicio.solicitudes.dtos.UbicacionDTO;
@@ -41,6 +44,9 @@ public class SolicitudService {
     private final EstadoService estadoService;
     private final ContenedorService contenedorService;
 
+    // Almacenamiento temporal de rutas tentativas por solicitud
+    private final Map<Long, RutasTentativasResponseDTO> rutasTentativasCache = new HashMap<>();
+
     public SolicitudService(SolicitudRepository repo,
                             ContenedorRepository contRepo,
                             RutasApiClient rutasApiClient,
@@ -64,7 +70,15 @@ public class SolicitudService {
     }
 
     public Solicitud obtenerPorId(Long id) {
-        return repo.findById(id).orElse(null);
+        Solicitud solicitud = repo.findById(id).orElse(null);
+
+        // ⭐ NUEVO: Si la solicitud tiene rutas tentativas en caché, agregarlas al objeto
+        if (solicitud != null && rutasTentativasCache.containsKey(id)) {
+            solicitud.setRutasTentativas(rutasTentativasCache.get(id));
+            log.debug("📋 Rutas tentativas agregadas a solicitud {} desde caché", id);
+        }
+
+        return solicitud;
     }
 
     public void eliminar(Long id) {
@@ -121,7 +135,6 @@ public class SolicitudService {
             }
 
             System.out.println(">>> PASO 3: Obteniendo estado inicial...");
-            // 3. ⭐ REFACTORIZADO: Estado inicial siempre es "disponible" (ID=1)
             Estado estado = estadoService.obtenerEstadoDisponible();
             System.out.println(">>> Estado obtenido: " + estado.getNombre() + " (ID: " + estado.getIdEstado() + ")");
 
@@ -131,6 +144,13 @@ public class SolicitudService {
             solicitud.setContenedor(contenedor);
             solicitud.setCliente(cliente);
             solicitud.setEstadoSolicitud(estado);
+
+            // Guardar las coordenadas
+            solicitud.setLatitudOrigen(requestDTO.getLatitudOrigen());
+            solicitud.setLongitudOrigen(requestDTO.getLongitudOrigen());
+            solicitud.setLatitudDestino(requestDTO.getLatitudDestino());
+            solicitud.setLongitudDestino(requestDTO.getLongitudDestino());
+            System.out.println(">>> Coordenadas guardadas - Origen: (" + requestDTO.getLatitudOrigen() + ", " + requestDTO.getLongitudOrigen() + "), Destino: (" + requestDTO.getLatitudDestino() + ", " + requestDTO.getLongitudDestino() + ")");
 
             System.out.println(">>> PASO 5: Guardando solicitud en BD...");
             Solicitud solicitudGuardada = repo.save(solicitud);
@@ -580,5 +600,171 @@ public class SolicitudService {
         repo.save(solicitud);
 
         log.info("✅ Solicitud {} cambiada a estado: en proceso (ID=2)", idSolicitud);
+    }
+
+    /**
+     * ⭐ NUEVO: Genera rutas tentativas para una solicitud y las guarda temporalmente
+     * @param idSolicitud ID de la solicitud
+     * @return Respuesta con las 3 rutas tentativas generadas
+     */
+    public RutasTentativasResponseDTO generarRutasTentativasParaSolicitud(Long idSolicitud) {
+        log.info("🗺️ Generando rutas tentativas para solicitud ID: {}", idSolicitud);
+
+        // 1. Validar que la solicitud existe
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        // 2. Validar que la solicitud tiene coordenadas (esto debe estar en la solicitud o ser pasado)
+        // Por ahora, vamos a requerir que las coordenadas se pasen cuando se crea la solicitud
+        // Entonces necesitamos guardar las coordenadas en la solicitud
+        // Como no están en el modelo actual, vamos a usar las coordenadas del DTO original
+
+        throw new RuntimeException("Para generar rutas tentativas, debe proporcionar las coordenadas de origen y destino");
+    }
+
+    /**
+     * ⭐ NUEVO: Genera rutas tentativas con coordenadas específicas
+     * @param idSolicitud ID de la solicitud
+     * @param request Request con las coordenadas
+     * @return Respuesta con las 3 rutas tentativas generadas
+     */
+    public RutasTentativasResponseDTO generarRutasTentativas(Long idSolicitud, GenerarRutasTentativasRequestDTO request) {
+        log.info("🗺️ Generando rutas tentativas para solicitud ID: {} desde ({}, {}) hasta ({}, {})",
+                idSolicitud, request.getLatitudOrigen(), request.getLongitudOrigen(),
+                request.getLatitudDestino(), request.getLongitudDestino());
+
+        // 1. Validar que la solicitud existe
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        // 2. Llamar al microservicio de rutas para generar las rutas tentativas
+        RutasTentativasResponseDTO response = rutasApiClient.generarRutasTentativas(request);
+
+        if (response == null) {
+            throw new RuntimeException("Error al generar rutas tentativas desde el microservicio de rutas");
+        }
+
+        // 3. Guardar las rutas tentativas en el caché temporal
+        rutasTentativasCache.put(idSolicitud, response);
+        log.info("✅ Rutas tentativas generadas y guardadas en caché para solicitud {}", idSolicitud);
+
+        // 4. ⭐ NUEVO: También agregar las rutas tentativas al objeto solicitud (campo @Transient)
+        solicitud.setRutasTentativas(response);
+        log.info("📋 Rutas tentativas agregadas al objeto Solicitud (campo transient)");
+
+        return response;
+    }
+
+    /**
+     * ⭐ NUEVO: Selecciona una ruta tentativa de las generadas previamente
+     * @param idSolicitud ID de la solicitud
+     * @param numeroRuta Número de ruta a seleccionar (1, 2 o 3)
+     * @return Solicitud actualizada con la ruta seleccionada
+     */
+    @Transactional
+    public Solicitud seleccionarRutaTentativa(Long idSolicitud, Integer numeroRuta) {
+        log.info("✅ Seleccionando ruta tentativa #{} para solicitud ID: {}", numeroRuta, idSolicitud);
+
+        // 1. Validar que la solicitud existe
+        Solicitud solicitud = repo.findById(idSolicitud)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
+
+        // 2. Validar que existen rutas tentativas generadas para esta solicitud
+        RutasTentativasResponseDTO rutasTentativas = rutasTentativasCache.get(idSolicitud);
+        if (rutasTentativas == null) {
+            throw new RuntimeException("No hay rutas tentativas generadas para esta solicitud. " +
+                    "Primero debe llamar al endpoint de generación de rutas tentativas.");
+        }
+
+        // 3. Validar el número de ruta
+        if (numeroRuta < 1 || numeroRuta > 3) {
+            throw new RuntimeException("El número de ruta debe ser 1, 2 o 3");
+        }
+
+        // 4. Obtener la ruta seleccionada
+        RutaTentativaDTO rutaSeleccionada;
+        String tipoRuta;
+        switch (numeroRuta) {
+            case 1:
+                rutaSeleccionada = rutasTentativas.getRutaDirecta();
+                tipoRuta = "DIRECTA";
+                break;
+            case 2:
+                rutaSeleccionada = rutasTentativas.getRutaCon1Deposito();
+                tipoRuta = "CON_1_DEPOSITO";
+                break;
+            case 3:
+                rutaSeleccionada = rutasTentativas.getRutaCon2Depositos();
+                tipoRuta = "CON_2_DEPOSITOS";
+                break;
+            default:
+                throw new RuntimeException("Número de ruta inválido");
+        }
+
+        if (rutaSeleccionada == null) {
+            throw new RuntimeException("La ruta seleccionada no está disponible");
+        }
+
+        log.info("📋 Ruta seleccionada: {} - Costo: ${}, Tiempo: {} min, Distancia: {} km",
+                rutaSeleccionada.getTipo(),
+                rutaSeleccionada.getCostoTotalAproximado(),
+                rutaSeleccionada.getDuracionTotalMinutos(),
+                rutaSeleccionada.getDistanciaTotalKm());
+
+        // 5. ⭐ NUEVO: Crear la ruta real en el microservicio de rutas
+        com.microservicio.solicitudes.dtos.CrearRutaDesdeTentativaDTO crearRutaDTO =
+            new com.microservicio.solicitudes.dtos.CrearRutaDesdeTentativaDTO();
+        crearRutaDTO.setIdSolicitud(idSolicitud);
+        crearRutaDTO.setTipoRuta(tipoRuta);
+        crearRutaDTO.setLatitudOrigen(solicitud.getLatitudOrigen());
+        crearRutaDTO.setLongitudOrigen(solicitud.getLongitudOrigen());
+        crearRutaDTO.setLatitudDestino(solicitud.getLatitudDestino());
+        crearRutaDTO.setLongitudDestino(solicitud.getLongitudDestino());
+        crearRutaDTO.setTramos(rutaSeleccionada.getTramos());
+
+        Long idRutaCreada = rutasApiClient.crearRutaDesdeTentativa(crearRutaDTO);
+
+        if (idRutaCreada == null) {
+            throw new RuntimeException("Error al crear la ruta en el microservicio de rutas");
+        }
+
+        log.info("✅ Ruta creada exitosamente con ID: {}", idRutaCreada);
+
+        // 6. Asignar el ID de la ruta creada a la solicitud
+        solicitud.setIdRuta(idRutaCreada);
+
+        // 7. Asignar valores estimados de la ruta tentativa
+        if (rutaSeleccionada.getCostoTotalAproximado() != null) {
+            solicitud.setCostoEstimado(rutaSeleccionada.getCostoTotalAproximado());
+        }
+
+        if (rutaSeleccionada.getDuracionTotalMinutos() != null) {
+            solicitud.setTiempoEstimado(rutaSeleccionada.getDuracionTotalMinutos().intValue());
+        }
+
+        // 8. Cambiar estado a "en proceso"
+        Estado estadoEnProceso = estadoService.obtenerEstadoEnProceso();
+        solicitud.setEstadoSolicitud(estadoEnProceso);
+        log.info("🔄 Solicitud {} cambiada a estado: en proceso (ID=2)", idSolicitud);
+
+        // 9. Cambiar estado del contenedor a "pendiente de entrega"
+        if (solicitud.getContenedor() != null) {
+            contenedorService.cambiarEstadoPendienteEntrega(solicitud.getContenedor().getIdContenedor());
+            log.info("📦 Contenedor {} cambiado a estado: {}",
+                    solicitud.getContenedor().getIdContenedor(),
+                    EstadoContenedor.PENDIENTE_ENTREGA);
+        }
+
+        // 10. Guardar la solicitud actualizada
+        Solicitud solicitudGuardada = repo.save(solicitud);
+
+        // 11. Limpiar el caché de rutas tentativas para esta solicitud
+        rutasTentativasCache.remove(idSolicitud);
+        log.info("🗑️ Rutas tentativas eliminadas del caché para solicitud {}", idSolicitud);
+
+        log.info("✅ Ruta tentativa seleccionada y asignada a solicitud {} con ID de ruta: {}",
+                idSolicitud, idRutaCreada);
+
+        return solicitudGuardada;
     }
 }
