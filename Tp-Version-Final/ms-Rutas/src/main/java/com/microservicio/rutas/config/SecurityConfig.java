@@ -50,56 +50,58 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos (Swagger, actuator)
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-
-                        // === RUTAS ===
-                        // GET /api/rutas - Listar todas las rutas: Solo ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
-
-                        // GET /api/rutas/tentativas - Listar rutas tentativas: Solo ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
-
-                        // GET /api/rutas/{id}/tentativa - Ver ruta tentativa específica: Solo ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/tentativa").hasRole("ADMIN")
-
-                        // GET /api/rutas/{id}/resumen - Ver resumen de ruta: ADMIN y CLIENTE
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/resumen").hasAnyRole("ADMIN", "CLIENTE")
-
-                        // GET /api/rutas/{id} - Ver detalle de ruta: ADMIN y CLIENTE
-                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
-
-                        // POST /api/rutas - Crear ruta: Solo ADMIN
-                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
-
-                        // DELETE /api/rutas/{id} - Eliminar ruta: Solo ADMIN
-                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
-
-                        // === TRAMOS ===
-                        // GET /api/tramos - Listar todos los tramos: Solo ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
-
-                        // GET /api/tramos/{id} - Ver tramo específico: ADMIN y TRANSPORTISTA
-                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
-
-                        // POST /api/tramos - Crear tramo: Solo ADMIN
-                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
-
-                        // DELETE /api/tramos/{id} - Eliminar tramo: Solo ADMIN
-                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
-
-                        // PUT /api/tramos/{id}/asignar-camion/{camionId} - Asignar camión: Solo ADMIN
-                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*/asignar-camion/*").hasRole("ADMIN")
-
-                        // === DEPÓSITOS ===
-                        // Todos los endpoints de depósitos: Solo ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/depositos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
-
-                        // Cualquier otra petición requiere autenticación
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
+//
+//                        // Endpoints públicos (Swagger, actuator)
+//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+//
+//                        // === RUTAS ===
+//                        // GET /api/rutas - Listar todas las rutas: Solo ADMIN
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas").hasRole("ADMIN")
+//
+//                        // GET /api/rutas/tentativas - Listar rutas tentativas: Solo ADMIN
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/tentativas").hasRole("ADMIN")
+//
+//                        // GET /api/rutas/{id}/tentativa - Ver ruta tentativa específica: Solo ADMIN
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/tentativa").hasRole("ADMIN")
+//
+//                        // GET /api/rutas/{id}/resumen - Ver resumen de ruta: ADMIN y CLIENTE
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*/resumen").hasAnyRole("ADMIN", "CLIENTE")
+//
+//                        // GET /api/rutas/{id} - Ver detalle de ruta: ADMIN y CLIENTE
+//                        .requestMatchers(HttpMethod.GET, "/api/rutas/*").hasAnyRole("ADMIN", "CLIENTE")
+//
+//                        // POST /api/rutas - Crear ruta: Solo ADMIN
+//                        .requestMatchers(HttpMethod.POST, "/api/rutas").hasRole("ADMIN")
+//
+//                        // DELETE /api/rutas/{id} - Eliminar ruta: Solo ADMIN
+//                        .requestMatchers(HttpMethod.DELETE, "/api/rutas/*").hasRole("ADMIN")
+//
+//                        // === TRAMOS ===
+//                        // GET /api/tramos - Listar todos los tramos: Solo ADMIN
+//                        .requestMatchers(HttpMethod.GET, "/api/tramos").hasRole("ADMIN")
+//
+//                        // GET /api/tramos/{id} - Ver tramo específico: ADMIN y TRANSPORTISTA
+//                        .requestMatchers(HttpMethod.GET, "/api/tramos/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
+//
+//                        // POST /api/tramos - Crear tramo: Solo ADMIN
+//                        .requestMatchers(HttpMethod.POST, "/api/tramos").hasRole("ADMIN")
+//
+//                        // DELETE /api/tramos/{id} - Eliminar tramo: Solo ADMIN
+//                        .requestMatchers(HttpMethod.DELETE, "/api/tramos/*").hasRole("ADMIN")
+//
+//                        // PUT /api/tramos/{id}/asignar-camion/{camionId} - Asignar camión: Solo ADMIN
+//                        .requestMatchers(HttpMethod.PUT, "/api/tramos/*/asignar-camion/*").hasRole("ADMIN")
+//
+//                        // === DEPÓSITOS ===
+//                        // Todos los endpoints de depósitos: Solo ADMIN
+//                        .requestMatchers(HttpMethod.GET, "/api/depositos/**").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.POST, "/api/depositos").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.PUT, "/api/depositos/*").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.DELETE, "/api/depositos/*").hasRole("ADMIN")
+//
+//                        // Cualquier otra petición requiere autenticación
+//                        .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))

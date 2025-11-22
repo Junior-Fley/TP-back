@@ -1,15 +1,14 @@
 package com.microservicio.solicitudes.controllers;
 
-
 import com.microservicio.solicitudes.clients.RutasApiClient;
-import com.microservicio.solicitudes.dtos.AsignarRutaDTO;
+// import com.microservicio.solicitudes.dtos.AsignarRutaDTO;
 import com.microservicio.solicitudes.dtos.ContenedorPendienteDTO;
-import com.microservicio.solicitudes.dtos.CrearSolicitudDTO;
+// import com.microservicio.solicitudes.dtos.CrearSolicitudDTO;
 import com.microservicio.solicitudes.dtos.EstadoContenedorDTO;
 import com.microservicio.solicitudes.dtos.GenerarRutasTentativasRequestDTO;
 import com.microservicio.solicitudes.dtos.RutaResumenDTO;
 import com.microservicio.solicitudes.dtos.RutasTentativasResponseDTO;
-import com.microservicio.solicitudes.dtos.SeleccionarRutaDTO;
+// import com.microservicio.solicitudes.dtos.SeleccionarRutaDTO;
 import com.microservicio.solicitudes.dtos.SolicitudRequestDTO;
 import com.microservicio.solicitudes.models.Solicitud;
 import com.microservicio.solicitudes.services.SolicitudService;
@@ -17,6 +16,9 @@ import com.microservicio.solicitudes.services.ContenedorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 
 import java.util.List;
 
@@ -28,22 +30,26 @@ public class SolicitudController {
     private final RutasApiClient rutasApiClient;
     private final ContenedorService contenedorService;
 
-
-    public SolicitudController(SolicitudService service, RutasApiClient rutasApiClient, ContenedorService contenedorService) {
+    public SolicitudController(SolicitudService service, RutasApiClient rutasApiClient,
+            ContenedorService contenedorService) {
         this.service = service;
         this.rutasApiClient = rutasApiClient;
         this.contenedorService = contenedorService;
     }
 
-    // GET /api/solicitudes - Listar todas las solicitudes
-    @PreAuthorize("hasRole('ADMIN')")
+    // ==========================================
+    // GET ENDPOINTS
+    // ==========================================
+
+    @Operation(summary = "Listar todas las solicitudes", description = "Obtiene una lista de todas las solicitudes registradas en el sistema.")
+//    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<Solicitud>> listar() {
         return ResponseEntity.ok(service.obtenerTodas());
     }
 
-    // GET /api/solicitudes/contenedores-pendientes - Consultar contenedores pendientes
-    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Consultar contenedores pendientes", description = "Obtiene una lista de los contenedores que están pendientes de ser procesados.")
+//    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/contenedores-pendientes")
     public ResponseEntity<List<ContenedorPendienteDTO>> obtenerContenedoresPendientes() {
         try {
@@ -58,8 +64,8 @@ public class SolicitudController {
         }
     }
 
-    // GET /api/solicitudes/contenedor/{idContenedor}/estado - Consultar estado del contenedor
-    @PreAuthorize("hasRole('CLIENTE')")
+    @Operation(summary = "Consultar estado del contenedor", description = "Obtiene el estado actual de un contenedor específico por su ID.")
+//    @PreAuthorize("hasRole('CLIENTE')")
     @GetMapping("/contenedor/{idContenedor}/estado")
     public ResponseEntity<?> obtenerEstadoContenedor(@PathVariable("idContenedor") Long idContenedor) {
         try {
@@ -80,16 +86,17 @@ public class SolicitudController {
         }
     }
 
-    // GET /api/solicitudes/{id} - Obtener solicitud por ID
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    @Operation(summary = "Obtener solicitud por ID", description = "Busca y retorna una solicitud específica basada en su ID.")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     @GetMapping("/{id}")
     public ResponseEntity<Solicitud> obtener(@PathVariable("id") Long id) {
         Solicitud s = service.obtenerPorId(id);
         return (s != null) ? ResponseEntity.ok(s) : ResponseEntity.notFound().build();
     }
 
-    // GET /api/solicitudes/{idSolicitud}/rutas - Obtener solicitud con su ruta completa
-    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Obtener solicitud con ruta completa", description = "Obtiene los detalles de una solicitud junto con la información completa de su ruta asignada.")
+//    @PreAuthorize("hasRole('ADMIN')")
+    @Hidden
     @GetMapping("/{idSolicitud}/rutas")
     public ResponseEntity<RutaResumenDTO> obtenerConRuta(@PathVariable Long idSolicitud) {
         Solicitud solicitud = service.obtenerPorId(idSolicitud);
@@ -111,8 +118,9 @@ public class SolicitudController {
         return ResponseEntity.ok(resultado);
     }
 
-    // GET /api/solicitudes/{id}/resumen-costos - Obtener resumen de costos
+    @Operation(summary = "Obtener resumen de costos", description = "Calcula y devuelve el resumen de costos asociado a una solicitud específica.")
     @GetMapping("/{id}/resumen-costos")
+    @Hidden
     public ResponseEntity<?> obtenerResumenCostos(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(service.obtenerResumenCostos(id));
@@ -123,29 +131,12 @@ public class SolicitudController {
         }
     }
 
-    // POST /api/solicitudes - Crear solicitud básica (DESHABILITADO - causa conflicto con crearSolicitudCompleta)
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @PostMapping
-//    public ResponseEntity<Solicitud> crear(@RequestBody Solicitud solicitud) {
-//        return ResponseEntity.status(201).body(service.crear(solicitud));
-//    }
+    // ==========================================
+    // POST ENDPOINTS
+    // ==========================================
 
-    // POST /api/solicitudes/creacion - Crear solicitud simplificada
-//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-//    @PostMapping("/creacion")
-//    public ResponseEntity<?> crearSolicitudSimple(@RequestBody CrearSolicitudDTO dto) {
-//        try {
-//            Solicitud solicitud = service.crearSolicitudSimple(dto);
-//            return ResponseEntity.status(201).body(solicitud);
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.status(400).body("Error: " + e.getMessage());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
-//        }
-//    }
-
-    // POST /api/solicitudes - Crear solicitud completa
-    @PreAuthorize("hasRole('CLIENTE')")
+    @Operation(summary = "Crear solicitud completa", description = "Crea una nueva solicitud con todos los detalles necesarios.")
+//    @PreAuthorize("hasRole('CLIENTE')")
     @PostMapping
     public ResponseEntity<Solicitud> crearSolicitudCompleta(@RequestBody SolicitudRequestDTO dto) {
         try {
@@ -156,7 +147,7 @@ public class SolicitudController {
         }
     }
 
-    // POST /api/solicitudes/{id}/finalizacion - Finalizar solicitud
+    @Operation(summary = "Finalizar solicitud", description = "Marca una solicitud como finalizada.")
     @PostMapping("/{id}/finalizacion")
     public ResponseEntity<?> finalizarSolicitud(@PathVariable("id") Long id) {
         try {
@@ -169,23 +160,98 @@ public class SolicitudController {
         }
     }
 
-    // PUT /api/solicitudes/{idSolicitud}/asignacion-ruta - Asignar ruta a solicitud
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @PutMapping("/{idSolicitud}/asignacion-ruta")
-//    public ResponseEntity<?> asignarRuta(
-//            @PathVariable("idSolicitud") Long idSolicitud,
-//            @RequestBody AsignarRutaDTO asignarRutaDTO) {
-//        try {
-//            Solicitud solicitud = service.asignarRuta(idSolicitud, asignarRutaDTO);
-//            return ResponseEntity.ok(solicitud);
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.status(404).body("Error: " + e.getMessage());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
-//        }
-//    }
+    @Operation(summary = "Generar rutas tentativas", description = "Genera opciones de rutas tentativas para una solicitud basada en sus coordenadas.")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    @PostMapping("/rutasTentativas/{idSolicitud}")
+    public ResponseEntity<?> generarRutasTentativas(
+            @PathVariable("idSolicitud") Long idSolicitud) {
+        try {
+            System.out.println("=== Generando rutas tentativas para solicitud " + idSolicitud + " ===");
 
-    // PUT /api/solicitudes/{idSolicitud}/contenedor/inicializacion-transito - Iniciar tránsito
+            // Obtener la solicitud para verificar que tiene coordenadas
+            Solicitud solicitud = service.obtenerPorId(idSolicitud);
+            if (solicitud == null) {
+                return ResponseEntity.status(404).body("Solicitud no encontrada con ID: " + idSolicitud);
+            }
+
+            // Validar que la solicitud tiene coordenadas
+            if (solicitud.getLatitudOrigen() == null || solicitud.getLongitudOrigen() == null ||
+                    solicitud.getLatitudDestino() == null || solicitud.getLongitudDestino() == null) {
+                return ResponseEntity.status(400)
+                        .body("La solicitud no tiene coordenadas de origen y destino guardadas");
+            }
+
+            // Crear el request con las coordenadas de la solicitud
+            GenerarRutasTentativasRequestDTO request = new GenerarRutasTentativasRequestDTO();
+            request.setLatitudOrigen(solicitud.getLatitudOrigen());
+            request.setLongitudOrigen(solicitud.getLongitudOrigen());
+            request.setLatitudDestino(solicitud.getLatitudDestino());
+            request.setLongitudDestino(solicitud.getLongitudDestino());
+
+            RutasTentativasResponseDTO rutas = service.generarRutasTentativas(idSolicitud, request);
+            System.out.println("=== Rutas tentativas generadas exitosamente ===");
+            return ResponseEntity.ok(rutas);
+        } catch (RuntimeException e) {
+            System.err.println("=== ERROR: " + e.getMessage() + " ===");
+            return ResponseEntity.status(400).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("=== ERROR interno: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Seleccionar ruta tentativa", description = "Asigna una de las rutas tentativas generadas a la solicitud.")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    @PostMapping("/{idSolicitud}/seleccionRuta/{numeroRuta}")
+    public ResponseEntity<?> seleccionRuta(
+            @PathVariable("idSolicitud") Long idSolicitud,
+            @PathVariable("numeroRuta") Integer numeroRuta) {
+        try {
+            System.out.println("=== Seleccionando ruta tentativa #" + numeroRuta +
+                    " para solicitud " + idSolicitud + " ===");
+            Solicitud solicitud = service.seleccionarRutaTentativa(idSolicitud, numeroRuta);
+            System.out.println("=== Ruta seleccionada y asignada exitosamente ===");
+            return ResponseEntity.ok(solicitud);
+        } catch (RuntimeException e) {
+            System.err.println("=== ERROR: " + e.getMessage() + " ===");
+            return ResponseEntity.status(400).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("=== ERROR interno: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
+        }
+    }
+
+    // POST /api/solicitudes - Crear solicitud básica (DESHABILITADO - causa
+    // conflicto con crearSolicitudCompleta)
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PostMapping
+    // public ResponseEntity<Solicitud> crear(@RequestBody Solicitud solicitud) {
+    // return ResponseEntity.status(201).body(service.crear(solicitud));
+    // }
+
+    // POST /api/solicitudes/creacion - Crear solicitud simplificada
+    // @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    // @PostMapping("/creacion")
+    // public ResponseEntity<?> crearSolicitudSimple(@RequestBody CrearSolicitudDTO
+    // dto) {
+    // try {
+    // Solicitud solicitud = service.crearSolicitudSimple(dto);
+    // return ResponseEntity.status(201).body(solicitud);
+    // } catch (RuntimeException e) {
+    // return ResponseEntity.status(400).body("Error: " + e.getMessage());
+    // } catch (Exception e) {
+    // return ResponseEntity.status(500).body("Error interno del servidor: " +
+    // e.getMessage());
+    // }
+    // }
+
+    // ==========================================
+    // PUT ENDPOINTS
+    // ==========================================
+
+    @Operation(summary = "Iniciar tránsito de contenedor", description = "Actualiza el estado del contenedor a 'en tránsito' e inicia el proceso de la solicitud.")
     @PutMapping("/{idSolicitud}/contenedor/inicializacion-transito")
     public ResponseEntity<?> iniciarTransitoContenedor(@PathVariable Long idSolicitud) {
         try {
@@ -212,8 +278,9 @@ public class SolicitudController {
         }
     }
 
-    // PUT /api/solicitudes/{idSolicitud}/finalizacion - Finalizar solicitud automáticamente
+    @Operation(summary = "Finalizar solicitud automáticamente", description = "Finaliza la solicitud y marca el contenedor como entregado, calculando costos finales.")
     @PutMapping("/{idSolicitud}/finalizacion")
+    @Hidden
     public ResponseEntity<?> finalizarSolicitudAutomatica(@PathVariable Long idSolicitud) {
         try {
             Solicitud solicitud = service.finalizarSolicitud(idSolicitud);
@@ -233,16 +300,38 @@ public class SolicitudController {
         }
     }
 
-    // DELETE /api/solicitudes/{id} - Eliminar solicitud
-    @PreAuthorize("hasRole('ADMIN')")
+    // PUT /api/solicitudes/{idSolicitud}/asignacion-ruta - Asignar ruta a solicitud
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PutMapping("/{idSolicitud}/asignacion-ruta")
+    // public ResponseEntity<?> asignarRuta(
+    // @PathVariable("idSolicitud") Long idSolicitud,
+    // @RequestBody AsignarRutaDTO asignarRutaDTO) {
+    // try {
+    // Solicitud solicitud = service.asignarRuta(idSolicitud, asignarRutaDTO);
+    // return ResponseEntity.ok(solicitud);
+    // } catch (RuntimeException e) {
+    // return ResponseEntity.status(404).body("Error: " + e.getMessage());
+    // } catch (Exception e) {
+    // return ResponseEntity.status(500).body("Error interno del servidor: " +
+    // e.getMessage());
+    // }
+    // }
+
+    // ==========================================
+    // DELETE ENDPOINTS
+    // ==========================================
+
+    @Operation(summary = "Eliminar solicitud", description = "Elimina una solicitud del sistema por su ID.")
+//    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
-    // DELETE /api/solicitudes/{idSolicitud}/designacion-ruta - Desasignar ruta
-    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Desasignar ruta", description = "Elimina la asignación de ruta de una solicitud.")
+//    @PreAuthorize("hasRole('ADMIN')")
+    @Hidden
     @DeleteMapping("/{idSolicitud}/designacion-ruta")
     public ResponseEntity<?> desasignarRuta(@PathVariable("idSolicitud") Long idSolicitud) {
         try {
@@ -251,68 +340,6 @@ public class SolicitudController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body("Error: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
-        }
-    }
-
-    // POST /api/solicitudes/rutasTentativas/{idSolicitud} - Generar rutas tentativas
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-    @PostMapping("/rutasTentativas/{idSolicitud}")
-    public ResponseEntity<?> generarRutasTentativas(
-            @PathVariable("idSolicitud") Long idSolicitud) {
-        try {
-            System.out.println("=== Generando rutas tentativas para solicitud " + idSolicitud + " ===");
-
-            // Obtener la solicitud para verificar que tiene coordenadas
-            Solicitud solicitud = service.obtenerPorId(idSolicitud);
-            if (solicitud == null) {
-                return ResponseEntity.status(404).body("Solicitud no encontrada con ID: " + idSolicitud);
-            }
-
-            // Validar que la solicitud tiene coordenadas
-            if (solicitud.getLatitudOrigen() == null || solicitud.getLongitudOrigen() == null ||
-                solicitud.getLatitudDestino() == null || solicitud.getLongitudDestino() == null) {
-                return ResponseEntity.status(400).body("La solicitud no tiene coordenadas de origen y destino guardadas");
-            }
-
-            // Crear el request con las coordenadas de la solicitud
-            GenerarRutasTentativasRequestDTO request = new GenerarRutasTentativasRequestDTO();
-            request.setLatitudOrigen(solicitud.getLatitudOrigen());
-            request.setLongitudOrigen(solicitud.getLongitudOrigen());
-            request.setLatitudDestino(solicitud.getLatitudDestino());
-            request.setLongitudDestino(solicitud.getLongitudDestino());
-
-            RutasTentativasResponseDTO rutas = service.generarRutasTentativas(idSolicitud, request);
-            System.out.println("=== Rutas tentativas generadas exitosamente ===");
-            return ResponseEntity.ok(rutas);
-        } catch (RuntimeException e) {
-            System.err.println("=== ERROR: " + e.getMessage() + " ===");
-            return ResponseEntity.status(400).body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("=== ERROR interno: " + e.getMessage() + " ===");
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
-        }
-    }
-
-    // POST /api/solicitudes/{idSolicitud}/seleccionRuta/{numeroRuta} - Seleccionar ruta tentativa
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-    @PostMapping("/{idSolicitud}/seleccionRuta/{numeroRuta}")
-    public ResponseEntity<?> seleccionRuta(
-            @PathVariable("idSolicitud") Long idSolicitud,
-            @PathVariable("numeroRuta") Integer numeroRuta) {
-        try {
-            System.out.println("=== Seleccionando ruta tentativa #" + numeroRuta +
-                             " para solicitud " + idSolicitud + " ===");
-            Solicitud solicitud = service.seleccionarRutaTentativa(idSolicitud, numeroRuta);
-            System.out.println("=== Ruta seleccionada y asignada exitosamente ===");
-            return ResponseEntity.ok(solicitud);
-        } catch (RuntimeException e) {
-            System.err.println("=== ERROR: " + e.getMessage() + " ===");
-            return ResponseEntity.status(400).body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("=== ERROR interno: " + e.getMessage() + " ===");
-            e.printStackTrace();
             return ResponseEntity.status(500).body("Error interno del servidor: " + e.getMessage());
         }
     }

@@ -54,7 +54,7 @@ public class CamionController {
     }
 
     @Operation(summary = "Obtener camión por ID", description = "Obtiene un camión específico por su identificador")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public Camion obtenerPorId(@PathVariable("id") Long id) {
         return service.obtenerPorId(id);

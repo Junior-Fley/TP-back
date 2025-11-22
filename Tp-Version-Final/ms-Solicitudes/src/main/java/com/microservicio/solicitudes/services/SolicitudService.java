@@ -48,11 +48,11 @@ public class SolicitudService {
     private final Map<Long, RutasTentativasResponseDTO> rutasTentativasCache = new HashMap<>();
 
     public SolicitudService(SolicitudRepository repo,
-                            ContenedorRepository contRepo,
-                            RutasApiClient rutasApiClient,
-                            ClienteService clienteService,
-                            EstadoService estadoService,
-                            ContenedorService contenedorService) {
+            ContenedorRepository contRepo,
+            RutasApiClient rutasApiClient,
+            ClienteService clienteService,
+            EstadoService estadoService,
+            ContenedorService contenedorService) {
         this.repo = repo;
         this.contRepo = contRepo;
         this.rutasApiClient = rutasApiClient;
@@ -72,7 +72,8 @@ public class SolicitudService {
     public Solicitud obtenerPorId(Long id) {
         Solicitud solicitud = repo.findById(id).orElse(null);
 
-        // ⭐ NUEVO: Si la solicitud tiene rutas tentativas en caché, agregarlas al objeto
+        // ⭐ NUEVO: Si la solicitud tiene rutas tentativas en caché, agregarlas al
+        // objeto
         if (solicitud != null && rutasTentativasCache.containsKey(id)) {
             solicitud.setRutasTentativas(rutasTentativasCache.get(id));
             log.debug("📋 Rutas tentativas agregadas a solicitud {} desde caché", id);
@@ -84,6 +85,7 @@ public class SolicitudService {
     public void eliminar(Long id) {
         repo.deleteById(id);
     }
+
     /**
      * Crea una solicitud completa incluyendo:
      * 1. Creación del contenedor con identificación única y estado "disponible"
@@ -100,7 +102,8 @@ public class SolicitudService {
             contenedor.setVolumen(requestDTO.getVolumenContenedor());
             contenedor.setEstado(EstadoContenedor.DISPONIBLE); // Estado inicial automático
             contenedor = contRepo.save(contenedor);
-            System.out.println(">>> Contenedor creado con ID: " + contenedor.getIdContenedor() + " - Estado: " + contenedor.getEstado());
+            System.out.println(">>> Contenedor creado con ID: " + contenedor.getIdContenedor() + " - Estado: "
+                    + contenedor.getEstado());
 
             System.out.println(">>> PASO 2: Buscando/creando cliente...");
             // 2. Obtener o crear el cliente si no existe (buscar por DNI)
@@ -150,7 +153,9 @@ public class SolicitudService {
             solicitud.setLongitudOrigen(requestDTO.getLongitudOrigen());
             solicitud.setLatitudDestino(requestDTO.getLatitudDestino());
             solicitud.setLongitudDestino(requestDTO.getLongitudDestino());
-            System.out.println(">>> Coordenadas guardadas - Origen: (" + requestDTO.getLatitudOrigen() + ", " + requestDTO.getLongitudOrigen() + "), Destino: (" + requestDTO.getLatitudDestino() + ", " + requestDTO.getLongitudDestino() + ")");
+            System.out.println(">>> Coordenadas guardadas - Origen: (" + requestDTO.getLatitudOrigen() + ", "
+                    + requestDTO.getLongitudOrigen() + "), Destino: (" + requestDTO.getLatitudDestino() + ", "
+                    + requestDTO.getLongitudDestino() + ")");
 
             System.out.println(">>> PASO 5: Guardando solicitud en BD...");
             Solicitud solicitudGuardada = repo.save(solicitud);
@@ -164,6 +169,7 @@ public class SolicitudService {
             throw e;
         }
     }
+
     /**
      * ⭐ NUEVO MÉTODO SIMPLIFICADO
      * Crea una solicitud solo con ID de cliente e ID de contenedor
@@ -210,6 +216,7 @@ public class SolicitudService {
 
         return solicitudGuardada;
     }
+
     /**
      * Consultar el estado del transporte de un contenedor (Cliente)
      * Permite al cliente verificar el estado actual de su contenedor
@@ -223,21 +230,22 @@ public class SolicitudService {
 
         if (solicitud != null && solicitud.getEstadoSolicitud() != null) {
             return new EstadoContenedorDTO(
-                idContenedor,
-                solicitud.getEstadoSolicitud().getNombre(),
-                solicitud.getNumeroSolicitud()
-            );
+                    idContenedor,
+                    solicitud.getEstadoSolicitud().getNombre(),
+                    solicitud.getNumeroSolicitud());
         }
 
         return null;
     }
+
     /**
      * 🔹 Requerimiento Funcional #4:
      * Asignar una ruta con todos sus tramos a la solicitud (Operador/Administrador)
      * Al asignar la ruta, cambia el estado del contenedor a "pendiente de entrega"
      *
-     * @param idSolicitud ID de la solicitud
-     * @param asignarRutaDTO DTO con información de la ruta a asignar (solo requiere idRuta)
+     * @param idSolicitud    ID de la solicitud
+     * @param asignarRutaDTO DTO con información de la ruta a asignar (solo requiere
+     *                       idRuta)
      * @return Solicitud actualizada with la ruta asignada
      */
     @Transactional
@@ -246,7 +254,8 @@ public class SolicitudService {
         Solicitud solicitud = repo.findById(idSolicitud)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
 
-        // 2. Validar que la ruta existe en el microservicio de rutas y obtener todos sus datos
+        // 2. Validar que la ruta existe en el microservicio de rutas y obtener todos
+        // sus datos
         RutaResumenDTO rutaResumen = rutasApiClient.obtenerRutaRaw(asignarRutaDTO.getIdRuta());
         if (rutaResumen == null) {
             throw new RuntimeException("Ruta no encontrada con ID: " + asignarRutaDTO.getIdRuta());
@@ -354,9 +363,9 @@ public class SolicitudService {
         return solicitudes.stream()
                 // Filtrar solo los contenedores pendientes o en tránsito
                 .filter(s -> s.getContenedor() != null &&
-                            s.getContenedor().getEstado() != null &&
-                            ("Pendiente de entrega".equalsIgnoreCase(s.getContenedor().getEstado()) ||
-                             "En tránsito".equalsIgnoreCase(s.getContenedor().getEstado())))
+                        s.getContenedor().getEstado() != null &&
+                        ("Pendiente de entrega".equalsIgnoreCase(s.getContenedor().getEstado()) ||
+                                "En tránsito".equalsIgnoreCase(s.getContenedor().getEstado())))
                 // Mapear a DTO con información de ubicación
                 .map(s -> {
                     ContenedorPendienteDTO dto = new ContenedorPendienteDTO();
@@ -365,9 +374,12 @@ public class SolicitudService {
                     dto.setIdContenedor(s.getContenedor().getIdContenedor());
                     dto.setNumeroSolicitud(s.getNumeroSolicitud());
                     dto.setEstadoContenedor(s.getContenedor().getEstado());
-                    dto.setEstadoSolicitud(s.getEstadoSolicitud() != null ? s.getEstadoSolicitud().getNombre() : "Sin estado");
+                    dto.setEstadoSolicitud(
+                            s.getEstadoSolicitud() != null ? s.getEstadoSolicitud().getNombre() : "Sin estado");
                     dto.setIdRuta(s.getIdRuta());
-                    dto.setNombreCliente(s.getCliente() != null ? s.getCliente().getNombre() + " " + s.getCliente().getApellido() : "Sin cliente");
+                    dto.setNombreCliente(
+                            s.getCliente() != null ? s.getCliente().getNombre() + " " + s.getCliente().getApellido()
+                                    : "Sin cliente");
                     dto.setDniCliente(s.getCliente() != null ? s.getCliente().getDni() : null);
                     dto.setPeso(s.getContenedor().getPeso());
                     dto.setVolumen(s.getContenedor().getVolumen());
@@ -407,7 +419,8 @@ public class SolicitudService {
     }
 
     /**
-     * ⭐ NUEVO: Determina la ubicación actual del contenedor basándose en el estado de los tramos
+     * ⭐ NUEVO: Determina la ubicación actual del contenedor basándose en el estado
+     * de los tramos
      */
     private UbicacionDTO determinarUbicacionActual(List<TramoDTO> tramos) {
         if (tramos == null || tramos.isEmpty()) {
@@ -451,11 +464,13 @@ public class SolicitudService {
         ubicacion.setIdTramoActual(tramos.get(0).getIdTramo());
         return ubicacion;
     }
+
     /**
      * 🏁 Finaliza una solicitud y calcula el costo final real
      * Cambia el estado de la solicitud a "completada" y el contenedor a "entregado"
      *
-     * Requerimiento: "Al finalizar registrar el cálculo de tiempo real y el cálculo de costo real en la solicitud."
+     * Requerimiento: "Al finalizar registrar el cálculo de tiempo real y el cálculo
+     * de costo real en la solicitud."
      *
      * Suma todos los costos reales de los tramos de la ruta asociada.
      * Actualiza costoFinal y tiempoReal en la solicitud.
@@ -515,8 +530,8 @@ public class SolicitudService {
                 .orElse(null);
 
         if (primerInicio != null && ultimoFin != null) {
-            long horasReales = ChronoUnit.HOURS.between(primerInicio, ultimoFin);
-            solicitud.setTiempoReal((int) horasReales);
+            long minutosReales = ChronoUnit.MINUTES.between(primerInicio, ultimoFin);
+            solicitud.setTiempoReal((int) minutosReales);
         }
 
         // 7. ⭐ REFACTORIZADO: Actualizar estado a "completada" (ID=3)
@@ -535,12 +550,12 @@ public class SolicitudService {
         // 9. Guardar la solicitud actualizada
         Solicitud solicitudFinalizada = repo.save(solicitud);
 
-        log.info("✅ Solicitud completada. Costo final: ${}, Tiempo real: {} horas",
+        log.info("✅ Solicitud completada. Costo final: ${}, Tiempo real: {} minutos",
                 costoFinal, solicitud.getTiempoReal());
         log.info("📊 Diferencia con estimado: ${} (Estimado: ${}, Real: ${})",
                 solicitud.getCostoEstimado() != null
-                    ? costoFinal.subtract(solicitud.getCostoEstimado())
-                    : "N/A",
+                        ? costoFinal.subtract(solicitud.getCostoEstimado())
+                        : "N/A",
                 solicitud.getCostoEstimado(),
                 costoFinal);
 
@@ -584,8 +599,6 @@ public class SolicitudService {
         return resumen;
     }
 
-
-
     /**
      * ⭐ REFACTORIZADO: Cambia el estado de la solicitud a "en proceso" (ID=2)
      * Se llama cuando se inicia el primer tramo de la ruta
@@ -603,7 +616,9 @@ public class SolicitudService {
     }
 
     /**
-     * ⭐ NUEVO: Genera rutas tentativas para una solicitud y las guarda temporalmente
+     * ⭐ NUEVO: Genera rutas tentativas para una solicitud y las guarda
+     * temporalmente
+     * 
      * @param idSolicitud ID de la solicitud
      * @return Respuesta con las 3 rutas tentativas generadas
      */
@@ -614,21 +629,27 @@ public class SolicitudService {
         Solicitud solicitud = repo.findById(idSolicitud)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
 
-        // 2. Validar que la solicitud tiene coordenadas (esto debe estar en la solicitud o ser pasado)
-        // Por ahora, vamos a requerir que las coordenadas se pasen cuando se crea la solicitud
+        // 2. Validar que la solicitud tiene coordenadas (esto debe estar en la
+        // solicitud o ser pasado)
+        // Por ahora, vamos a requerir que las coordenadas se pasen cuando se crea la
+        // solicitud
         // Entonces necesitamos guardar las coordenadas en la solicitud
-        // Como no están en el modelo actual, vamos a usar las coordenadas del DTO original
+        // Como no están en el modelo actual, vamos a usar las coordenadas del DTO
+        // original
 
-        throw new RuntimeException("Para generar rutas tentativas, debe proporcionar las coordenadas de origen y destino");
+        throw new RuntimeException(
+                "Para generar rutas tentativas, debe proporcionar las coordenadas de origen y destino");
     }
 
     /**
      * ⭐ NUEVO: Genera rutas tentativas con coordenadas específicas
+     * 
      * @param idSolicitud ID de la solicitud
-     * @param request Request con las coordenadas
+     * @param request     Request con las coordenadas
      * @return Respuesta con las 3 rutas tentativas generadas
      */
-    public RutasTentativasResponseDTO generarRutasTentativas(Long idSolicitud, GenerarRutasTentativasRequestDTO request) {
+    public RutasTentativasResponseDTO generarRutasTentativas(Long idSolicitud,
+            GenerarRutasTentativasRequestDTO request) {
         log.info("🗺️ Generando rutas tentativas para solicitud ID: {} desde ({}, {}) hasta ({}, {})",
                 idSolicitud, request.getLatitudOrigen(), request.getLongitudOrigen(),
                 request.getLatitudDestino(), request.getLongitudDestino());
@@ -648,7 +669,8 @@ public class SolicitudService {
         rutasTentativasCache.put(idSolicitud, response);
         log.info("✅ Rutas tentativas generadas y guardadas en caché para solicitud {}", idSolicitud);
 
-        // 4. ⭐ NUEVO: También agregar las rutas tentativas al objeto solicitud (campo @Transient)
+        // 4. ⭐ NUEVO: También agregar las rutas tentativas al objeto solicitud (campo
+        // @Transient)
         solicitud.setRutasTentativas(response);
         log.info("📋 Rutas tentativas agregadas al objeto Solicitud (campo transient)");
 
@@ -657,8 +679,9 @@ public class SolicitudService {
 
     /**
      * ⭐ NUEVO: Selecciona una ruta tentativa de las generadas previamente
+     * 
      * @param idSolicitud ID de la solicitud
-     * @param numeroRuta Número de ruta a seleccionar (1, 2 o 3)
+     * @param numeroRuta  Número de ruta a seleccionar (1, 2 o 3)
      * @return Solicitud actualizada con la ruta seleccionada
      */
     @Transactional
@@ -712,8 +735,7 @@ public class SolicitudService {
                 rutaSeleccionada.getDistanciaTotalKm());
 
         // 5. ⭐ NUEVO: Crear la ruta real en el microservicio de rutas
-        com.microservicio.solicitudes.dtos.CrearRutaDesdeTentativaDTO crearRutaDTO =
-            new com.microservicio.solicitudes.dtos.CrearRutaDesdeTentativaDTO();
+        com.microservicio.solicitudes.dtos.CrearRutaDesdeTentativaDTO crearRutaDTO = new com.microservicio.solicitudes.dtos.CrearRutaDesdeTentativaDTO();
         crearRutaDTO.setIdSolicitud(idSolicitud);
         crearRutaDTO.setTipoRuta(tipoRuta);
         crearRutaDTO.setLatitudOrigen(solicitud.getLatitudOrigen());

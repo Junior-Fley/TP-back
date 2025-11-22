@@ -52,31 +52,31 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
+                        .anyRequest().permitAll()/// Comentarrrrrr o borrar esta línea para activar seguridad
+////
 //
-
-                        // Public / swagger
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-
-                        // Camiones - gestión por ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/camiones").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/camiones/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/camiones").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/camiones/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/camiones/*").hasRole("ADMIN")
-
-                        // Transportistas - gestión por ADMIN, consulta por TRANSPORTISTA
-                        .requestMatchers(HttpMethod.GET, "/api/transportistas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/transportistas/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                        .requestMatchers(HttpMethod.POST, "/api/transportistas").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/transportistas/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/transportistas/*").hasRole("ADMIN")
-
-                        // Tramos de ejemplo - gestión por ADMIN
-                        .requestMatchers("/api/tramos/**").hasRole("ADMIN")
-
-                        // Cualquier otra petición requiere autenticación
-                        .anyRequest().authenticated()
+//                        // Public / swagger
+//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+//
+//                        // Camiones - gestión por ADMIN
+//                        .requestMatchers(HttpMethod.GET, "/api/camiones").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/camiones/*").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.POST, "/api/camiones").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.PUT, "/api/camiones/*").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.DELETE, "/api/camiones/*").hasRole("ADMIN")
+//
+//                        // Transportistas - gestión por ADMIN, consulta por TRANSPORTISTA
+//                        .requestMatchers(HttpMethod.GET, "/api/transportistas").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/transportistas/*").hasAnyRole("ADMIN", "TRANSPORTISTA")
+//                        .requestMatchers(HttpMethod.POST, "/api/transportistas").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.PUT, "/api/transportistas/*").hasRole("ADMIN")
+//                        .requestMatchers(HttpMethod.DELETE, "/api/transportistas/*").hasRole("ADMIN")
+//
+//                        // Tramos de ejemplo - gestión por ADMIN
+//                        .requestMatchers("/api/tramos/**").hasRole("ADMIN")
+//
+//                        // Cualquier otra petición requiere autenticación
+//                        .anyRequest().authenticated()
 
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
