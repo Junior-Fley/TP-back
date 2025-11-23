@@ -35,8 +35,10 @@ public class SecurityConfig {
                 // Endpoints públicos
                 .pathMatchers(HttpMethod.GET, "/api/ciudades/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/api/depositos/**").permitAll()
+                // Permitir registro de transportistas sin autenticación (POST)
+                //Aceptar tanto "/api/transportistas" como "/api/transportistas/" para evitar problemas de matching
+                .pathMatchers(HttpMethod.POST, "/api/transportistas", "/api/transportistas/").permitAll()
 
-                // Endpoints para ADMIN
                 .pathMatchers("/api/contenedores/**").hasRole("ADMIN")
                 .pathMatchers("/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO")
                 .pathMatchers("/api/solicitudes/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
