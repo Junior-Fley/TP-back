@@ -65,7 +65,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Consultar estado del contenedor", description = "Obtiene el estado actual de un contenedor específico por su ID.")
-//    @PreAuthorize("hasRole('CLIENTE')")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     @GetMapping("/contenedor/{idContenedor}/estado")
     public ResponseEntity<?> obtenerEstadoContenedor(@PathVariable("idContenedor") Long idContenedor) {
         try {
@@ -202,7 +202,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Seleccionar ruta tentativa", description = "Asigna una de las rutas tentativas generadas a la solicitud.")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{idSolicitud}/seleccionRuta/{numeroRuta}")
     public ResponseEntity<?> seleccionRuta(
             @PathVariable("idSolicitud") Long idSolicitud,

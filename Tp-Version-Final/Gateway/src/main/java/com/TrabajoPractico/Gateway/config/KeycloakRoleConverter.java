@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 /**
  * Convertidor personalizado para extraer roles de Keycloak
- * Los roles están en realm_access.roles y resource_access.<client>.roles
+ * Los roles están en realm_access. roles y resource_access.<client>.roles
  */
 @Component
 public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
@@ -25,7 +25,7 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
         System.out.println("realm_access: " + realmAccess);
 
         if (realmAccess == null || realmAccess.isEmpty()) {
-            System.out.println("⚠️ WARNING: No realm_access found in token");
+            System.out.println(" WARNING: No realm_access found in token");
             return Collections.emptyList();
         }
 
@@ -35,7 +35,7 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
         System.out.println("Roles from token: " + roles);
 
         if (roles == null || roles.isEmpty()) {
-            System.out.println("⚠️ WARNING: No roles found in realm_access");
+            System.out.println("WARNING: No roles found in realm_access");
             return Collections.emptyList();
         }
 
@@ -43,7 +43,7 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
                 .collect(Collectors.toList());
 
-        System.out.println("✅ Granted authorities: " + authorities);
+        System.out.println("Granted authorities: " + authorities);
 
         return authorities;
     }

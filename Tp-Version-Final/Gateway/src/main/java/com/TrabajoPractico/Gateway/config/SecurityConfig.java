@@ -30,35 +30,60 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeExchange(exchanges -> exchanges
-                // Endpoints públicos
-                .pathMatchers(HttpMethod.GET, "/api/ciudades/**").permitAll()
-                .pathMatchers(HttpMethod.GET, "/api/depositos/**").permitAll()
-                // Permitir registro de transportistas sin autenticación (POST)
-                //Aceptar tanto "/api/transportistas" como "/api/transportistas/" para evitar problemas de matching
-                .pathMatchers(HttpMethod.POST, "/api/transportistas", "/api/transportistas/").permitAll()
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(exchanges -> exchanges
 
-                .pathMatchers("/api/contenedores/**").hasRole("ADMIN")
-                .pathMatchers("/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO")
-                .pathMatchers("/api/solicitudes/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
-                .pathMatchers("/api/camiones/**").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .pathMatchers("/api/transportistas/**").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .pathMatchers("/api/rutas/**").hasAnyRole("ADMIN", "EMPLEADO")
-                .pathMatchers("/api/tramos/**").hasAnyRole("ADMIN", "EMPLEADO", "TRANSPORTISTA")
-                .pathMatchers("/api/tipos-tramo/**").hasRole("ADMIN")
-                .pathMatchers("/api/estados-tramo/**").hasRole("ADMIN")
-                .pathMatchers("/api/osrm/**").hasAnyRole("ADMIN", "EMPLEADO")
+                        // =========================
+                        // 1) ADMIN - recursos administrativos
+                        // =========================
+                        .pathMatchers("/api/contenedores/**").hasRole("ADMIN")
+                        .pathMatchers("/api/clientes/**").hasRole("ADMIN")
+                        .pathMatchers("/api/rutas/**").hasRole("ADMIN")
+                        .pathMatchers("/api/tipos-tramo/**").hasRole("ADMIN")
+                        .pathMatchers("/api/estados-tramo/**").hasRole("ADMIN")
+                        .pathMatchers("/api/osrm/**").hasRole("ADMIN")
+                        .pathMatchers("/api/ciudades/**").hasRole("ADMIN")
+                        .pathMatchers("/api/depositos/**").hasRole("ADMIN")
 
-                // Cualquier otra petición debe estar autenticada
-                .anyExchange().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt
-                    .jwtAuthenticationConverter(grantedAuthoritiesExtractor())
-                    .jwtDecoder(reactiveJwtDecoder())
+                        // =========================
+                        // 2) SOLICITUDES
+                        // =========================
+                        // Crear solicitud: solo CLIENTE
+                        .pathMatchers(HttpMethod.POST, "/api/solicitudes")
+                        .hasRole("CLIENTE")
+
+                        // Cualquier GET sobre /api/solicitudes/**:
+                        // - CLIENTE (por ejemplo, sus solicitudes)
+                        // - ADMIN (todas las solicitudes)
+                        .pathMatchers(HttpMethod.GET, "/api/solicitudes/**")
+                        .hasAnyRole("CLIENTE", "ADMIN")
+
+                        // Para otros métodos (PUT, DELETE, etc.) sobre /api/solicitudes/**
+                        // solo ADMIN
+                        .pathMatchers("/api/solicitudes/**")
+                        .hasRole("ADMIN")
+
+                        // =========================
+                        // 3) TRANSPORTISTA
+                        // =========================
+                        .pathMatchers("/api/camiones/**")
+                        .hasAnyRole("ADMIN", "TRANSPORTISTA")
+                        .pathMatchers("/api/transportistas/**")
+                        .hasAnyRole("ADMIN", "TRANSPORTISTA")
+                        .pathMatchers("/api/tramos/**")
+                        .hasAnyRole("ADMIN", "TRANSPORTISTA")
+
+                        // =========================
+                        // Cualquier otra petición debe estar autenticada
+                        // =========================
+                        .anyExchange().authenticated()
                 )
-            );
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(grantedAuthoritiesExtractor())
+                                .jwtDecoder(reactiveJwtDecoder())
+                        )
+                );
 
         return http.build();
     }
@@ -85,16 +110,19 @@ public class SecurityConfig {
                         if (delegate == null) {
                             try {
                                 NimbusReactiveJwtDecoder jwtDecoder = (NimbusReactiveJwtDecoder)
-                                    ReactiveJwtDecoders.fromIssuerLocation(issuerUri);
+                                        ReactiveJwtDecoders.fromIssuerLocation(issuerUri);
 
                                 // Configura validador de timestamp con clock-skew de 120 segundos
-                                JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofSeconds(120));
-                                OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(timestampValidator);
+                                JwtTimestampValidator timestampValidator =
+                                        new JwtTimestampValidator(Duration.ofSeconds(120));
+                                OAuth2TokenValidator<Jwt> withClockSkew =
+                                        new DelegatingOAuth2TokenValidator<>(timestampValidator);
 
                                 jwtDecoder.setJwtValidator(withClockSkew);
                                 delegate = jwtDecoder;
                             } catch (Exception e) {
-                                return Mono.error(new JwtException("Error al inicializar ReactiveJwtDecoder: " + e.getMessage(), e));
+                                return Mono.error(new JwtException(
+                                        "Error al inicializar ReactiveJwtDecoder: " + e.getMessage(), e));
                             }
                         }
                     }
