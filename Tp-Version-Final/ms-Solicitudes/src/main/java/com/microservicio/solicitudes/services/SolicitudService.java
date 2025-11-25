@@ -291,10 +291,11 @@ public class SolicitudService {
             log.info("⏱️ Tiempo automático desde ruta: {} min", rutaResumen.getTiempoEstimadoMin().intValue());
         }
 
-        // 5. ⭐ REFACTORIZADO: Cambiar estado a "en proceso" (ID=2) al asignar ruta
-        Estado estadoEnProceso = estadoService.obtenerEstadoEnProceso();
-        solicitud.setEstadoSolicitud(estadoEnProceso);
-        log.info("🔄 Solicitud {} cambiada a estado: en proceso (ID=2)", idSolicitud);
+        // 5. ⭐ REFACTORIZADO: Cambiar estado a "pendiente_entrega" (ID=2) al asignar
+        // ruta
+        Estado estadoPendienteEntrega = estadoService.obtenerEstadoPendienteEntrega();
+        solicitud.setEstadoSolicitud(estadoPendienteEntrega);
+        log.info("🔄 Solicitud {} cambiada a estado: pendiente_entrega (ID=2)", idSolicitud);
 
         // 6. ⭐ NUEVO: Cambiar estado del contenedor a "pendiente de entrega"
         if (solicitud.getContenedor() != null) {
@@ -534,10 +535,10 @@ public class SolicitudService {
             solicitud.setTiempoReal((int) minutosReales);
         }
 
-        // 7. ⭐ REFACTORIZADO: Actualizar estado a "completada" (ID=3)
-        Estado estadoCompletada = estadoService.obtenerEstadoCompletada();
-        solicitud.setEstadoSolicitud(estadoCompletada);
-        log.info("🔄 Solicitud {} cambiada a estado: completada (ID=3)", idSolicitud);
+        // 7. ⭐ REFACTORIZADO: Actualizar estado a "entregado" (ID=4)
+        Estado estadoEntregado = estadoService.obtenerEstadoEntregado();
+        solicitud.setEstadoSolicitud(estadoEntregado);
+        log.info("🔄 Solicitud {} cambiada a estado: entregado (ID=4)", idSolicitud);
 
         // 8. ⭐ NUEVO: Cambiar estado del contenedor a "entregado"
         if (solicitud.getContenedor() != null) {
@@ -600,19 +601,19 @@ public class SolicitudService {
     }
 
     /**
-     * ⭐ REFACTORIZADO: Cambia el estado de la solicitud a "en proceso" (ID=2)
+     * ⭐ REFACTORIZADO: Cambia el estado de la solicitud a "en_transito" (ID=3)
      * Se llama cuando se inicia el primer tramo de la ruta
      */
     @Transactional
-    public void cambiarEstadoEnProceso(Long idSolicitud) {
+    public void cambiarEstadoEnTransito(Long idSolicitud) {
         Solicitud solicitud = repo.findById(idSolicitud)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + idSolicitud));
 
-        Estado estadoEnProceso = estadoService.obtenerEstadoEnProceso();
-        solicitud.setEstadoSolicitud(estadoEnProceso);
+        Estado estadoEnTransito = estadoService.obtenerEstadoEnTransito();
+        solicitud.setEstadoSolicitud(estadoEnTransito);
         repo.save(solicitud);
 
-        log.info("✅ Solicitud {} cambiada a estado: en proceso (ID=2)", idSolicitud);
+        log.info("✅ Solicitud {} cambiada a estado: en_transito (ID=3)", idSolicitud);
     }
 
     /**
@@ -764,10 +765,10 @@ public class SolicitudService {
             solicitud.setTiempoEstimado(rutaSeleccionada.getDuracionTotalMinutos().intValue());
         }
 
-        // 8. Cambiar estado a "en proceso"
-        Estado estadoEnProceso = estadoService.obtenerEstadoEnProceso();
-        solicitud.setEstadoSolicitud(estadoEnProceso);
-        log.info("🔄 Solicitud {} cambiada a estado: en proceso (ID=2)", idSolicitud);
+        // 8. Cambiar estado a "pendiente_entrega"
+        Estado estadoPendienteEntrega = estadoService.obtenerEstadoPendienteEntrega();
+        solicitud.setEstadoSolicitud(estadoPendienteEntrega);
+        log.info("🔄 Solicitud {} cambiada a estado: pendiente_entrega (ID=2)", idSolicitud);
 
         // 9. Cambiar estado del contenedor a "pendiente de entrega"
         if (solicitud.getContenedor() != null) {

@@ -42,14 +42,14 @@ public class SolicitudController {
     // ==========================================
 
     @Operation(summary = "Listar todas las solicitudes", description = "Obtiene una lista de todas las solicitudes registradas en el sistema.")
-//    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<Solicitud>> listar() {
         return ResponseEntity.ok(service.obtenerTodas());
     }
 
     @Operation(summary = "Consultar contenedores pendientes", description = "Obtiene una lista de los contenedores que están pendientes de ser procesados.")
-//    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/contenedores-pendientes")
     public ResponseEntity<List<ContenedorPendienteDTO>> obtenerContenedoresPendientes() {
         try {
@@ -65,7 +65,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Consultar estado del contenedor", description = "Obtiene el estado actual de un contenedor específico por su ID.")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    // @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     @GetMapping("/contenedor/{idContenedor}/estado")
     public ResponseEntity<?> obtenerEstadoContenedor(@PathVariable("idContenedor") Long idContenedor) {
         try {
@@ -87,7 +87,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Obtener solicitud por ID", description = "Busca y retorna una solicitud específica basada en su ID.")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    // @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     @GetMapping("/{id}")
     public ResponseEntity<Solicitud> obtener(@PathVariable("id") Long id) {
         Solicitud s = service.obtenerPorId(id);
@@ -95,7 +95,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Obtener solicitud con ruta completa", description = "Obtiene los detalles de una solicitud junto con la información completa de su ruta asignada.")
-//    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @Hidden
     @GetMapping("/{idSolicitud}/rutas")
     public ResponseEntity<RutaResumenDTO> obtenerConRuta(@PathVariable Long idSolicitud) {
@@ -136,7 +136,7 @@ public class SolicitudController {
     // ==========================================
 
     @Operation(summary = "Crear solicitud completa", description = "Crea una nueva solicitud con todos los detalles necesarios.")
-//    @PreAuthorize("hasRole('CLIENTE')")
+    // @PreAuthorize("hasRole('CLIENTE')")
     @PostMapping
     public ResponseEntity<Solicitud> crearSolicitudCompleta(@RequestBody SolicitudRequestDTO dto) {
         try {
@@ -161,7 +161,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Generar rutas tentativas", description = "Genera opciones de rutas tentativas para una solicitud basada en sus coordenadas.")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
+    // @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     @PostMapping("/rutasTentativas/{idSolicitud}")
     public ResponseEntity<?> generarRutasTentativas(
             @PathVariable("idSolicitud") Long idSolicitud) {
@@ -202,7 +202,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Seleccionar ruta tentativa", description = "Asigna una de las rutas tentativas generadas a la solicitud.")
-//    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{idSolicitud}/seleccionRuta/{numeroRuta}")
     public ResponseEntity<?> seleccionRuta(
             @PathVariable("idSolicitud") Long idSolicitud,
@@ -263,7 +263,7 @@ public class SolicitudController {
                 return ResponseEntity.badRequest().body("La solicitud no tiene un contenedor asignado");
             }
             contenedorService.cambiarEstadoEnTransito(solicitud.getContenedor().getIdContenedor());
-            service.cambiarEstadoEnProceso(idSolicitud);
+            service.cambiarEstadoEnTransito(idSolicitud);
 
             java.util.HashMap<String, Object> response = new java.util.HashMap<>();
             response.put("message", "Solicitud en proceso y contenedor en tránsito");
@@ -322,7 +322,7 @@ public class SolicitudController {
     // ==========================================
 
     @Operation(summary = "Eliminar solicitud", description = "Elimina una solicitud del sistema por su ID.")
-//    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable("id") Long id) {
         service.eliminar(id);
@@ -330,7 +330,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Desasignar ruta", description = "Elimina la asignación de ruta de una solicitud.")
-//    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @Hidden
     @DeleteMapping("/{idSolicitud}/designacion-ruta")
     public ResponseEntity<?> desasignarRuta(@PathVariable("idSolicitud") Long idSolicitud) {

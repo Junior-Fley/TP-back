@@ -40,8 +40,9 @@ public class EstadoService {
      * ⭐ REFACTORIZADO: Obtiene un estado existente por ID
      * Los estados son fijos en la BD:
      * - ID 1 = "disponible"
-     * - ID 2 = "en proceso"
-     * - ID 3 = "completada"
+     * - ID 2 = "pendiente_entrega"
+     * - ID 3 = "en_transito"
+     * - ID 4 = "entregado"
      *
      * NO se crean nuevos estados dinámicamente.
      */
@@ -49,17 +50,21 @@ public class EstadoService {
         return obtenerPorId(1L); // Estado fijo: disponible
     }
 
-    public Estado obtenerEstadoEnProceso() {
-        return obtenerPorId(3L); // Estado fijo: en proceso
+    public Estado obtenerEstadoPendienteEntrega() {
+        return obtenerPorId(2L); // Estado fijo: pendiente_entrega
     }
 
-    public Estado obtenerEstadoCompletada() {
-        return obtenerPorId(4L); // Estado fijo: completada
+    public Estado obtenerEstadoEnTransito() {
+        return obtenerPorId(3L); // Estado fijo: en_transito
+    }
+
+    public Estado obtenerEstadoEntregado() {
+        return obtenerPorId(4L); // Estado fijo: entregado
     }
 
     /**
-     * @deprecated Use obtenerEstadoDisponible(), obtenerEstadoEnProceso() o
-     *             obtenerEstadoCompletada()
+     * @deprecated Use obtenerEstadoDisponible(), obtenerEstadoPendienteEntrega(),
+     *             obtenerEstadoEnTransito() o obtenerEstadoEntregado()
      *             Este método se mantiene solo para compatibilidad temporal
      */
     @Deprecated
@@ -69,14 +74,16 @@ public class EstadoService {
         // Mapear nombres a IDs fijos
         if (EstadoSolicitud.DISPONIBLE.equalsIgnoreCase(nombre)) {
             return obtenerEstadoDisponible();
-        } else if (EstadoSolicitud.EN_PROCESO.equalsIgnoreCase(nombre)) {
-            return obtenerEstadoEnProceso();
-        } else if (EstadoSolicitud.COMPLETADA.equalsIgnoreCase(nombre)) {
-            return obtenerEstadoCompletada();
+        } else if (EstadoSolicitud.PENDIENTE_ENTREGA.equalsIgnoreCase(nombre)) {
+            return obtenerEstadoPendienteEntrega();
+        } else if (EstadoSolicitud.EN_TRANSITO.equalsIgnoreCase(nombre)) {
+            return obtenerEstadoEnTransito();
+        } else if (EstadoSolicitud.ENTREGADO.equalsIgnoreCase(nombre)) {
+            return obtenerEstadoEntregado();
         }
 
         throw new IllegalArgumentException(
                 "Estado inválido: '" + nombre + "'. " +
-                        "Use: disponible, en proceso, o completada");
+                        "Use: disponible, pendiente_entrega, en_transito, o entregado");
     }
 }

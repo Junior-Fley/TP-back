@@ -191,6 +191,15 @@ public class TramoService {
         EstadoTramo estadoAsignado = obtenerOCrearEstado("asignado");
         tramo.setEstado(estadoAsignado);
 
+        // 7. ⭐ NUEVO: Marcar camión como NO disponible al asignarlo
+        try {
+            camionesApiClient.actualizarDisponibilidad(idCamion, false);
+            log.info("✅ Camión ID {} marcado como NO disponible (asignado al tramo {})", idCamion, idTramo);
+        } catch (Exception e) {
+            log.warn("⚠️ No se pudo actualizar disponibilidad del camión: {}", e.getMessage());
+            // Continuar de todos modos - el camión está asignado al tramo
+        }
+
         Tramo tramoGuardado = repo.save(tramo);
         log.info("✅ Camión {} asignado exitosamente al tramo {}", idCamion, idTramo);
 
@@ -217,6 +226,63 @@ public class TramoService {
         // Validar que el tramo está en estado "asignado"
         if (tramo.getEstado() == null || !"asignado".equalsIgnoreCase(tramo.getEstado().getNombre())) {
             throw new RuntimeException("El tramo debe estar en estado 'asignado' para poder iniciarse");
+        }
+
+        // ⭐ NUEVO: Validar que los tramos anteriores estén finalizados (validación
+        // secuencial)
+        if (tramo.getRuta() != null) {
+            Long idRuta = tramo.getRuta().getIdRuta();
+            List<Tramo> tramosRuta = repo.findByRutaIdRuta(idRuta);
+
+            // Ordenar tramos por ID (asumiendo que se crean en orden secuencial)
+            tramosRuta.sort((t1, t2) -> t1.getIdTramo().compareTo(t2.getIdTramo()));
+
+            // Encontrar el índice del tramo actual
+            int indiceTramoActual = -1;
+            for (int i = 0; i < tramosRuta.size(); i++) {
+                if (tramosRuta.get(i).getIdTramo().equals(idTramo)) {
+                    indiceTramoActual = i;
+                    break;
+                }
+            }
+
+            // Validar que todos los tramos anteriores estén finalizados
+            if (indiceTramoActual > 0) {
+                // Recopilar TODOS los tramos que no están finalizados
+                StringBuilder tramosNoFinalizados = new StringBuilder();
+                int cantidadNoFinalizados = 0;
+
+                for (int i = 0; i < indiceTramoActual; i++) {
+                    Tramo tramoAnterior = tramosRuta.get(i);
+                    if (tramoAnterior.getEstado() == null ||
+                            !"finalizado".equalsIgnoreCase(tramoAnterior.getEstado().getNombre())) {
+                        cantidadNoFinalizados++;
+                        String estadoActual = tramoAnterior.getEstado() != null
+                                ? tramoAnterior.getEstado().getNombre()
+                                : "sin estado";
+                        tramosNoFinalizados.append(String.format(
+                                "\n  - Tramo ID %d (Estado: %s)",
+                                tramoAnterior.getIdTramo(),
+                                estadoActual));
+                    }
+                }
+
+                // Si hay tramos sin finalizar, lanzar error con lista completa
+                if (cantidadNoFinalizados > 0) {
+                    throw new RuntimeException(String.format(
+                            "❌ No se puede iniciar el tramo %d. " +
+                                    "Hay %d tramo(s) anterior(es) que deben estar finalizados primero:%s\n\n" +
+                                    "Por favor, finalice los tramos en orden secuencial antes de continuar.",
+                            idTramo,
+                            cantidadNoFinalizados,
+                            tramosNoFinalizados.toString()));
+                }
+
+                log.info("✅ Validación secuencial: todos los {} tramos anteriores están finalizados",
+                        indiceTramoActual);
+            } else if (indiceTramoActual == 0) {
+                log.info("✅ Este es el primer tramo de la ruta");
+            }
         }
 
         // ⭐ MODIFICADO: Tomar fecha/hora actual automáticamente
