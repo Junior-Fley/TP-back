@@ -1,6 +1,5 @@
 package com.microservicio.solicitudes.services;
 
-
 import com.microservicio.solicitudes.constants.EstadoSolicitud;
 import com.microservicio.solicitudes.models.Estado;
 import com.microservicio.solicitudes.repositories.EstadoRepository;
@@ -22,8 +21,7 @@ public class EstadoService {
     }
 
     public Estado obtenerPorId(Long id) {
-        return repo.findById(id).orElseThrow(() ->
-            new RuntimeException("Estado no encontrado con ID: " + id));
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Estado no encontrado con ID: " + id));
     }
 
     public Estado crear(Estado estado) {
@@ -52,16 +50,17 @@ public class EstadoService {
     }
 
     public Estado obtenerEstadoEnProceso() {
-        return obtenerPorId(2L); // Estado fijo: en proceso
+        return obtenerPorId(3L); // Estado fijo: en proceso
     }
 
     public Estado obtenerEstadoCompletada() {
-        return obtenerPorId(3L); // Estado fijo: completada
+        return obtenerPorId(4L); // Estado fijo: completada
     }
 
     /**
-     * @deprecated Use obtenerEstadoDisponible(), obtenerEstadoEnProceso() o obtenerEstadoCompletada()
-     * Este método se mantiene solo para compatibilidad temporal
+     * @deprecated Use obtenerEstadoDisponible(), obtenerEstadoEnProceso() o
+     *             obtenerEstadoCompletada()
+     *             Este método se mantiene solo para compatibilidad temporal
      */
     @Deprecated
     public Estado obtenerOCrearPorNombre(String nombre) {
@@ -77,8 +76,7 @@ public class EstadoService {
         }
 
         throw new IllegalArgumentException(
-            "Estado inválido: '" + nombre + "'. " +
-            "Use: disponible, en proceso, o completada"
-        );
+                "Estado inválido: '" + nombre + "'. " +
+                        "Use: disponible, en proceso, o completada");
     }
 }
